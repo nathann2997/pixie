@@ -76,7 +76,7 @@
    */
   function resolveApiBaseUrl(override) {
     if (override) return override.replace(/\/$/, '');
-    return 'https://us-central1-pigxel-prod.cloudfunctions.net';
+    return 'https://us-central1-pixie-b5d33.cloudfunctions.net';
   }
 
   // ── Configuration Fetching ────────────────────────────────────
