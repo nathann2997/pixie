@@ -444,6 +444,46 @@ export const reportAudit = functions.https.onRequest(
   }
 );
 
+export const verifySiteInstallation = functions.https.onCall(
+  { region: "us-central1", timeoutSeconds: 10 },
+  async (request) => {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Sign in required.");
+
+    const { siteId } = request.data;
+    if (typeof siteId !== "string" || !siteId.trim()) {
+      throw new HttpsError("invalid-argument", "siteId is required.");
+    }
+
+    const siteDoc = await db.collection("sites").doc(siteId).get();
+    if (!siteDoc.exists) {
+      throw new HttpsError("not-found", "Site not found.");
+    }
+
+    const siteData = siteDoc.data()!;
+
+    if (siteData.owner_id !== request.auth.uid) {
+      throw new HttpsError("permission-denied", "Not your site.");
+    }
+
+    const audit = siteData.pixel_audit;
+    if (!audit || !audit.script_installed) {
+      return {
+        success: true,
+        scriptDetected: false,
+        detectedPixels: [],
+        pageUrl: siteData.url || "",
+      };
+    }
+
+    return {
+      success: true,
+      scriptDetected: true,
+      detectedPixels: audit.detected_pixels || [],
+      pageUrl: audit.page_url || siteData.url || "",
+    };
+  }
+);
+
 /**
  * Health check endpoint
  */
