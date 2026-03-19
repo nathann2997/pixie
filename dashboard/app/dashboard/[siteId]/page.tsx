@@ -122,7 +122,15 @@ export default function SiteSetupPage() {
     try {
       const newStatus = goLiveAction === "activate" ? "active" : "paused";
       await updateDoc(doc(db, "sites", siteId), { status: newStatus });
-      toast.success(goLiveAction === "activate" ? "Tracking is now live" : "Tracking paused");
+      // Brief celebration for first go-live
+      if (goLiveAction === "activate") {
+        toast.success("Tracking is now live! Events will start flowing in.", {
+          duration: 5000,
+          icon: "🎉",
+        });
+      } else {
+        toast.success("Tracking paused");
+      }
       setGoLiveOpen(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to update status");
