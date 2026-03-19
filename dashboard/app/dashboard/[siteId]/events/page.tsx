@@ -300,7 +300,7 @@ export default function EventsPage() {
               <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Events</h1>
               <p className="text-sm text-slate-500 mt-0.5">
                 {allEvents.length === 0
-                  ? "No events set up yet"
+                  ? "Define what Pigxel tracks for you"
                   : `${allEvents.length} event${allEvents.length !== 1 ? "s" : ""} · ${visiblePlatforms.length - 1} platform${visiblePlatforms.length - 1 !== 1 ? "s" : ""}`}
               </p>
             </div>
@@ -346,18 +346,21 @@ export default function EventsPage() {
               {allEvents.length === 0 ? (
                 <div className="bg-white border border-dashed border-slate-300 rounded-xl p-12 text-center">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 border border-rose-100 mx-auto mb-5">
-                    <Target className="h-6 w-6 text-rose-400" />
+                    <Sparkles className="h-6 w-6 text-rose-400" />
                   </div>
                   <h3 className="text-base font-semibold text-slate-900 mb-2">No events yet</h3>
                   <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto leading-relaxed">
                     Events are the actions you care about — button clicks, form submissions, and page visits.
-                    Use the Builder tab to create them with AI, or add them manually.
+                    Switch to the <span className="font-medium text-slate-700">Builder</span> tab to let AI suggest what to track, or add events manually.
                   </p>
                   <div className="flex items-center justify-center gap-3 flex-wrap">
-                    <NeonButton onClick={() => setAddEventOpen(true)} className="gap-1.5">
+                    <button
+                      onClick={() => setAddEventOpen(true)}
+                      className="flex items-center gap-1.5 h-9 px-4 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-colors"
+                    >
                       <Plus className="h-4 w-4" />
                       Add manually
-                    </NeonButton>
+                    </button>
                   </div>
                 </div>
               ) : (

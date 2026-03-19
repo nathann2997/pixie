@@ -124,7 +124,7 @@ function NavContent({
     ? [
         { label: "Setup",  href: `/dashboard/${siteId}`,        icon: Settings2, exact: true  },
         { label: "Events", href: `/dashboard/${siteId}/events`, icon: Target,    exact: false },
-        { label: "Pulse",  href: `/dashboard/${siteId}/health`, icon: Activity,  exact: false },
+        { label: "Health", href: `/dashboard/${siteId}/health`, icon: Activity,  exact: false },
       ]
     : [];
 

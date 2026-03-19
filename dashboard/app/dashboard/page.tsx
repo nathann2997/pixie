@@ -101,7 +101,7 @@ function ProjectCard({ site, onClick }: { site: Site; onClick: () => void }) {
               )}
             </>
           ) : (
-            <p className="text-xs text-slate-400">No data sources yet</p>
+            <p className="text-xs text-slate-400">No analytics connected</p>
           )}
         </div>
         <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-rose-400 group-hover:translate-x-0.5 transition-all shrink-0" />
@@ -113,7 +113,7 @@ function ProjectCard({ site, onClick }: { site: Site; onClick: () => void }) {
           <p className="text-xs text-slate-400">
             {timeAgo(site.last_event_at)
               ? <>Last event <span className="text-slate-500 font-medium">{timeAgo(site.last_event_at)}</span></>
-              : "No events received yet"}
+              : "Waiting for first event\u2026"}
           </p>
         </div>
       )}
@@ -165,12 +165,12 @@ export default function WorkspacePage() {
           {/* Page header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Workspace</h1>
+              <h1 className="text-xl font-semibold text-slate-900 tracking-tight">Projects</h1>
               <p className="text-sm text-slate-500 mt-0.5">
                 {loading
                   ? 'Loading…'
                   : sites.length === 0
-                    ? 'Add your first project block to start tracking'
+                    ? 'Add your first project to start tracking'
                     : `${sites.length} project${sites.length !== 1 ? 's' : ''}${liveSites > 0 ? ` · ${liveSites} live` : ''}${setupRequired > 0 ? ` · ${setupRequired} need setup` : ''}`
                 }
               </p>
@@ -204,7 +204,7 @@ export default function WorkspacePage() {
               </div>
               <h3 className="text-base font-semibold text-slate-900 mb-2">Your workspace is empty</h3>
               <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto leading-relaxed">
-                Add a new project block to start. Pigxel will organize your tracking for
+                Add a new project to start. Pigxel will organize your tracking for
                 Google Analytics, Meta Pixel, and more.
               </p>
               <NeonButton onClick={() => setAddSiteOpen(true)}>
