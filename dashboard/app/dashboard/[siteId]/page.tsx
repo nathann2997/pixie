@@ -13,6 +13,7 @@ import { PixelConfigForm } from "@/components/dashboard/pixel-config-form";
 import { DeleteSiteModal } from "@/components/dashboard/delete-site-modal";
 import { EditSiteModal } from "@/components/dashboard/edit-site-modal";
 import { VerifyInstallation } from "@/components/dashboard/verify-installation";
+import { GoLiveDialog } from "@/components/dashboard/go-live-dialog";
 import { NeonButton } from "@/components/ui/neon-button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -71,6 +72,8 @@ export default function SiteSetupPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen,   setEditOpen]  = useState(false);
   const [menuOpen,   setMenuOpen]  = useState(false);
+  const [goLiveOpen, setGoLiveOpen] = useState(false);
+  const [goLiveAction, setGoLiveAction] = useState<"activate" | "pause">("activate");
 
   const router = useRouter();
 
@@ -94,12 +97,19 @@ export default function SiteSetupPage() {
     return () => document.removeEventListener("click", handler);
   }, [menuOpen]);
 
-  const handleStatusToggle = async (checked: boolean) => {
+  const handleStatusToggle = (checked: boolean) => {
+    setGoLiveAction(checked ? "activate" : "pause");
+    setGoLiveOpen(true);
+  };
+
+  const confirmStatusToggle = async () => {
     if (!site || updating) return;
     setUpdating(true);
     try {
-      await updateDoc(doc(db, "sites", siteId), { status: checked ? "active" : "paused" });
-      toast.success(checked ? "Tracking is now live" : "Tracking paused");
+      const newStatus = goLiveAction === "activate" ? "active" : "paused";
+      await updateDoc(doc(db, "sites", siteId), { status: newStatus });
+      toast.success(goLiveAction === "activate" ? "Tracking is now live" : "Tracking paused");
+      setGoLiveOpen(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to update status");
     } finally {
@@ -178,6 +188,15 @@ export default function SiteSetupPage() {
 
           <DeleteSiteModal open={deleteOpen} onOpenChange={setDeleteOpen} siteId={siteId} siteName={displayName} />
           <EditSiteModal   open={editOpen}   onOpenChange={setEditOpen}   siteId={siteId} currentName={site.name ?? ""} currentUrl={site.url} />
+          <GoLiveDialog
+            open={goLiveOpen}
+            onOpenChange={setGoLiveOpen}
+            action={goLiveAction}
+            onConfirm={confirmStatusToggle}
+            loading={updating}
+            pixelConfig={config.pixels ?? {}}
+            eventCount={config.events?.length ?? 0}
+          />
 
           {/* ── Page header ─────────────────────────────────────────── */}
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-5 mb-5">
@@ -224,13 +243,6 @@ export default function SiteSetupPage() {
                         ? "Script detected — flip the switch to go live."
                         : "Install the script on your site, then go live. Pigxel will auto-detect your analytics."}
                     </p>
-                    <NeonButton
-                      className="ml-auto shrink-0 bg-emerald-500 hover:bg-emerald-600 h-7 px-3 text-xs"
-                      disabled={updating}
-                      onClick={() => handleStatusToggle(true)}
-                    >
-                      Go Live
-                    </NeonButton>
                   </div>
                 )}
               </div>
