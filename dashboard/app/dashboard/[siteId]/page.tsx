@@ -14,6 +14,7 @@ import { DeleteSiteModal } from "@/components/dashboard/delete-site-modal";
 import { EditSiteModal } from "@/components/dashboard/edit-site-modal";
 import { VerifyInstallation } from "@/components/dashboard/verify-installation";
 import { GoLiveDialog } from "@/components/dashboard/go-live-dialog";
+import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
 import { NeonButton } from "@/components/ui/neon-button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -296,6 +297,14 @@ export default function SiteSetupPage() {
               </div>
             </div>
           </div>
+
+          <OnboardingChecklist
+            siteId={siteId}
+            scriptInstalled={isScriptInstalled}
+            hasPixels={hasAnalytics}
+            hasEvents={(config.events?.length ?? 0) > 0}
+            isLive={site.status === "active"}
+          />
 
           {/* ── Step 1 — Install script ──────────────────────────────── */}
           <div className="space-y-4">
