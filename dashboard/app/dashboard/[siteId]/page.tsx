@@ -384,6 +384,24 @@ export default function SiteSetupPage() {
                     )}
                   </button>
                 </div>
+                <div className="mt-4 pt-3 border-t border-slate-100">
+                  <p className="text-xs font-medium text-slate-500 mb-2">Where to paste</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[
+                      { name: "Shopify", hint: "Online Store → Themes → Edit code → theme.liquid → before </head>" },
+                      { name: "WordPress", hint: "Appearance → Theme Editor → header.php → before </head>" },
+                      { name: "Webflow", hint: "Project Settings → Custom Code → Head Code" },
+                      { name: "Squarespace", hint: "Settings → Advanced → Code Injection → Header" },
+                      { name: "Wix", hint: "Settings → Custom Code → Head → Add Code" },
+                      { name: "Other", hint: "Paste before the </head> tag on every page" },
+                    ].map((p) => (
+                      <div key={p.name} className="rounded-lg border border-slate-200 px-3 py-2 bg-slate-50/50">
+                        <p className="text-xs font-medium text-slate-700">{p.name}</p>
+                        <p className="text-[11px] text-slate-400 leading-snug mt-0.5">{p.hint}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 {!isScriptInstalled && (
                   <p className="text-xs text-slate-400 mt-3">
                     Once installed, Pigxel will automatically detect the script and update your status.

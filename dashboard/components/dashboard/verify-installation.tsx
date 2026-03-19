@@ -60,7 +60,7 @@ export function VerifyInstallation({ siteId, siteUrl }: VerifyInstallationProps)
     return (
       <button
         onClick={handleVerify}
-        className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-rose-500 transition-colors"
+        className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-colors"
       >
         <Search className="h-3.5 w-3.5" />
         Verify installation
