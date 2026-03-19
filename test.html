@@ -530,10 +530,19 @@
     Uses client_active (seeded in Firestore emulator — status: active)
     Points to the local emulator via data-api
   ============================================================ -->
-  <script
-    src="http://localhost:8000/pigxel.js?id=test-ndwxvmjz&debug=true"
-    data-api="http://127.0.0.1:5001/pixie-dev/us-central1"
-  ></script>
+  <script>
+    // Allow URL params to override defaults for different environments
+    // e.g. test.html?script_host=https://cdn.example.com&api_host=https://api.example.com&client_id=my-site
+    var params = new URLSearchParams(window.location.search);
+    var scriptHost = params.get('script_host') || 'http://localhost:8000';
+    var apiHost = params.get('api_host') || 'http://127.0.0.1:5001/pixie-dev/us-central1';
+    var clientId = params.get('client_id') || 'test-ndwxvmjz';
+
+    var s = document.createElement('script');
+    s.src = scriptHost + '/pigxel.js?id=' + clientId + '&debug=true';
+    s.setAttribute('data-api', apiHost);
+    document.head.appendChild(s);
+  </script>
 
   <!-- ============================================================
     TEST UTILITIES
@@ -653,7 +662,8 @@
       var ga4Id = hasGA4 ? 'G-DEMO12345' : null;
       var metaId = hasMeta && window.fbq._fbevents && window.fbq._fbevents[0] ? window.fbq._fbevents[0].pixelId : null;
 
-      siteIdDisplay.textContent = 'id: test-ndwxvmjz';
+      var displayId = new URLSearchParams(window.location.search).get('client_id') || 'test-ndwxvmjz';
+      siteIdDisplay.textContent = 'id: ' + displayId;
 
       // Status header — reflect actual Pigxel site status
       var statusColors = { active: '#34d399', pending: '#fbbf24', paused: '#64748b' };
