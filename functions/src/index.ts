@@ -165,7 +165,8 @@ interface ActiveResponse extends TrackingConfig {
  */
 export const getSiteConfig = functions.https.onRequest(
   {
-    cors: true, // Enable CORS for all origins
+    // CORS must allow all origins — pigxel.js runs on client websites
+    cors: true,
     region: 'us-central1',
   },
   async (req, res) => {
@@ -216,6 +217,22 @@ export const getSiteConfig = functions.https.onRequest(
 
       // Get site data
       const siteData = siteDoc.data() as SiteDocument;
+
+      // Optional origin check — log mismatches for monitoring but don't block
+      // (pigxel.js may be loaded in dev environments, iframes, etc.)
+      try {
+        const origin = (req.headers.origin || req.headers.referer || '') as string;
+        const siteUrl = siteData.url || '';
+        if (origin && siteUrl) {
+          const expectedHost = new URL(siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`).hostname;
+          if (!origin.includes(expectedHost)) {
+            functions.logger.warn('Origin mismatch', { siteId, origin, expectedHost });
+          }
+        }
+      } catch {
+        // Malformed URL in site config — don't crash the request
+      }
+
       const { status, trackingConfig } = siteData;
 
       functions.logger.info('Site found', { siteId, status });
