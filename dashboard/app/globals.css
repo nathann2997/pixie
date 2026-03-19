@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+@theme {
+  --color-coral: #F87171;
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-in-left {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+}
+
+@layer base {
+  /* ── Pigxel Light Theme CSS variables (used by Shadcn/UI primitives) ── */
+  :root {
+    --font-inter: "Inter", sans-serif;
+    --font-jetbrains-mono: "JetBrains Mono", monospace;
+    --radius: 0.75rem;
+
+    /* Surface */
+    --background: 0 0% 100%;           /* white */
+    --foreground: 222 47% 6%;          /* slate-900 */
+
+    /* Card */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 6%;
+
+    /* Popover / dropdown */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 6%;
+
+    /* Primary — Pigxel Coral (rose-400 #F87171) */
+    --primary: 0 91% 71%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary — slate-100 */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    /* Muted — slate-100 */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent — slate-100 */
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+
+    /* Destructive — rose-600 */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border / Input / Ring */
+    --border: 214 32% 91%;             /* slate-200 */
+    --input: 214 32% 91%;              /* slate-200 */
+    --ring: 0 91% 71%;                 /* coral — matches primary */
+  }
+
+  * {
+    border-color: rgb(226 232 240); /* slate-200 */
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    color: rgb(15 23 42); /* slate-900 */
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  }
+}
+
+/* ── Utility Classes ────────────────────────────────── */
+@layer utilities {
+  /* Status dot animation */
+  .pulse-slow {
+    animation: pulse-slow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Fade in */
+  .animate-fade-in {
+    animation: fade-in 0.2s ease-out both;
+  }
+
+  .animate-slide-in-left {
+    animation: slide-in-left 0.2s ease-out both;
+  }
+}
+
+/* ── Scrollbar ──────────────────────────────────────── */
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400;
+  }
+}
