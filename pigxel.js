@@ -383,6 +383,10 @@
 
   function patchHistoryForSPA() {
     try {
+      // Guard: only patch once (prevents conflicts if pigxel.js loads twice)
+      if (history.__pigxel_patched) return;
+      history.__pigxel_patched = true;
+
       var _push = history.pushState.bind(history);
       var _replace = history.replaceState.bind(history);
 
