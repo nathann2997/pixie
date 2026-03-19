@@ -8,8 +8,7 @@ import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { chromium } from 'playwright-core';
-import chromiumBin from '@sparticuz/chromium';
-import * as fs from 'fs';
+import { getBrowserLaunchOptions, setupRouteBlocking } from './ai/browser';
 
 // ── AI Suite ──────────────────────────────────────────────────────────────────
 export { scrapeAndMinifyUrl }   from './ai/scrapeUrl';
@@ -18,55 +17,6 @@ export { generateTrackingPlan } from './ai/generatePlan';
 export { updateDraftPlan }      from './ai/updateDraftPlan';
 export { applyTrackingConfig }  from './ai/applyConfig';
 export { eventBuilderChat }     from './ai/eventBuilderChat';
-
-// Candidate paths for a local Chrome/Chromium install (macOS + Linux)
-const LOCAL_CHROME_CANDIDATES = [
-  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-  '/Applications/Chromium.app/Contents/MacOS/Chromium',
-  '/usr/bin/google-chrome',
-  '/usr/bin/chromium-browser',
-  '/usr/bin/chromium',
-];
-
-function findLocalChrome(): string | null {
-  return LOCAL_CHROME_CANDIDATES.find((p) => fs.existsSync(p)) ?? null;
-}
-
-/**
- * Returns browser launch options appropriate for the current environment.
- * - Emulator / local dev: use system Chrome (avoids @sparticuz/chromium
- *   Linux binary which cannot execute on macOS).
- * - Production Cloud Functions: use the Lambda-optimised @sparticuz/chromium.
- */
-async function getBrowserLaunchOptions(): Promise<{
-  executablePath: string;
-  args: string[];
-  headless: boolean;
-}> {
-  const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
-
-  if (isEmulator) {
-    const localPath = findLocalChrome();
-    if (!localPath) {
-      throw new Error(
-        'No local Chrome/Chromium found. Install Google Chrome or Chromium to use Scan in the emulator.'
-      );
-    }
-    functions.logger.info('Using local Chrome for emulator scan', { executablePath: localPath });
-    return {
-      executablePath: localPath,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-      headless: true,
-    };
-  }
-
-  // Production: use Lambda-optimised binary
-  return {
-    executablePath: await chromiumBin.executablePath(),
-    args: chromiumBin.args,
-    headless: true,
-  };
-}
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -342,43 +292,7 @@ export const scanSite = functions.https.onCall(
 
       const page = await browser.newPage();
       await page.setExtraHTTPHeaders({ 'User-Agent': 'Pigxel-Scanner/1.0' });
-
-      // Block external resources that are irrelevant for DOM scanning and
-      // would prevent networkidle from resolving (analytics pixels, ad scripts,
-      // fonts, images, media).  The scanner only needs the HTML + inline JS.
-      await page.route('**/*', async (route) => {
-        const type = route.request().resourceType();
-        const reqUrl = route.request().url();
-
-        const BLOCKED_DOMAINS = [
-          'googletagmanager.com',
-          'google-analytics.com',
-          'analytics.google.com',
-          'connect.facebook.net',
-          'facebook.com/tr',
-          'doubleclick.net',
-          'googlesyndication.com',
-          'tiktok.com',
-          'snap.com',
-          'clarity.ms',
-          'hotjar.com',
-          'intercom.io',
-          'crisp.chat',
-        ];
-
-        if (
-          type === 'image' ||
-          type === 'media' ||
-          type === 'font' ||
-          type === 'stylesheet' ||
-          BLOCKED_DOMAINS.some((d) => reqUrl.includes(d))
-        ) {
-          await route.abort();
-          return;
-        }
-
-        await route.continue();
-      });
+      await setupRouteBlocking(page, true); // blockStylesheets=true for scan-only
 
       // domcontentloaded is reliable — HTML + synchronous JS is parsed.
       // We add a short extra wait so any defer/async scripts have time to run.
