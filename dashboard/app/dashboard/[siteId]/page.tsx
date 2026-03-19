@@ -98,6 +98,19 @@ export default function SiteSetupPage() {
     return () => document.removeEventListener("click", handler);
   }, [menuOpen]);
 
+  // Redirect to Health page when setup is fully complete
+  useEffect(() => {
+    if (!loading && site) {
+      const cfg = site.trackingConfig ?? defaultTrackingConfig;
+      const scriptDone = !!site.pixel_audit;
+      const pixelsDone = !!(cfg.pixels?.ga4 || cfg.pixels?.meta);
+      const isActive = site.status === "active";
+      if (scriptDone && pixelsDone && isActive) {
+        router.replace(`/dashboard/${siteId}/health`);
+      }
+    }
+  }, [loading, site, siteId, router]);
+
   const handleStatusToggle = (checked: boolean) => {
     setGoLiveAction(checked ? "activate" : "pause");
     setGoLiveOpen(true);
