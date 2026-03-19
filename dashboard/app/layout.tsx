@@ -21,6 +21,9 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Pigxel — Marketing Tracking Workspace",
   description: "Structured, organized marketing data tracking. Connect your pixels, define conversion blocks, and understand what's working.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
