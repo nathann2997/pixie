@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pixie Configuration Schema",
+  "description": "Configuration format for Pixie AI Marketing Agent",
+  "type": "object",
+  "required": ["pixels", "events"],
+  "properties": {
+    "pixels": {
+      "type": "object",
+      "description": "Marketing pixels to load on the page",
+      "properties": {
+        "ga4": {
+          "type": "string",
+          "pattern": "^G-[A-Z0-9]+$",
+          "description": "Google Analytics 4 Measurement ID (e.g., G-XXXXXXXXX)",
+          "example": "G-XXXXXXXXX"
+        },
+        "meta": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "description": "Meta (Facebook) Pixel ID",
+          "example": "123456789012345"
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "description": "Event tracking rules",
+      "items": {
+        "type": "object",
+        "required": ["selector", "trigger", "platform", "event_name"],
+        "properties": {
+          "selector": {
+            "type": "string",
+            "description": "CSS selector to match elements",
+            "examples": [
+              "#buy-btn",
+              ".signup-form",
+              "[data-event='add_to_cart']",
+              "button.checkout"
+            ]
+          },
+          "trigger": {
+            "type": "string",
+            "enum": ["click", "submit"],
+            "description": "DOM event type to listen for"
+          },
+          "platform": {
+            "type": "string",
+            "enum": ["ga4", "meta"],
+            "description": "Platform to send the event to"
+          },
+          "event_name": {
+            "type": "string",
+            "description": "Name of the event to track",
+            "examples": [
+              "purchase",
+              "add_to_cart",
+              "Lead",
+              "Contact",
+              "CompleteRegistration"
+            ]
+          },
+          "event_data": {
+            "type": "object",
+            "description": "Additional event parameters (optional)",
+            "additionalProperties": true,
+            "examples": [
+              {
+                "currency": "USD",
+                "value": 99.99
+              },
+              {
+                "content_name": "Premium Plan",
+                "content_category": "Subscription"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "pixels": {
+        "ga4": "G-XXXXXXXXX",
+        "meta": "123456789012345"
+      },
+      "events": [
+        {
+          "selector": "#buy-btn",
+          "trigger": "click",
+          "platform": "ga4",
+          "event_name": "purchase",
+          "event_data": {
+            "currency": "USD",
+            "value": 99.99
+          }
+        },
+        {
+          "selector": ".signup-form",
+          "trigger": "submit",
+          "platform": "meta",
+          "event_name": "Lead"
+        },
+        {
+          "selector": "[data-event='add_to_cart']",
+          "trigger": "click",
+          "platform": "ga4",
+          "event_name": "add_to_cart"
+        },
+        {
+          "selector": "button.contact-us",
+          "trigger": "click",
+          "platform": "meta",
+          "event_name": "Contact"
+        }
+      ]
+    }
+  ]
+}
