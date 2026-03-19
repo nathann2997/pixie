@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloom & Co — Demo Store | Pigxel Test</title>
+
+  <!-- ============================================================
+    SIMULATED GA4 + META PIXEL
+    On a real site these would be installed by the developer.
+    Pigxel DETECTS these — it never injects them itself.
+    We stub them here so the audit has something to find.
+  ============================================================ -->
+
+  <!-- dataLayer (Google Tag Manager-style) -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    // Push an initial pageview so the dataLayer looks healthy
+    window.dataLayer.push({ event: 'page_view', page: window.location.href });
+  </script>
+
+  <!-- Simulated gtag (GA4) — stubbed, no real network call -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-DEMO12345');
+  </script>
+  <!--
+    Script tag with type="text/plain" so the browser never fetches the URL
+    (prevents networkidle from blocking) but the src is still visible in
+    document.scripts so Pigxel's DOM scanner detects it as GA4.
+  -->
+  <script type="text/plain" src="https://www.googletagmanager.com/gtag/js?id=G-DEMO12345" data-test-stub="true"></script>
+
+  <!-- Simulated Meta Pixel — stubbed -->
+  <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){
+      n.callMethod ? n.callMethod.apply(n,arguments) : n.queue.push(arguments);
+    };if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];n._fbevents=[{pixelId:'987654321'}];
+    }(window);
+    fbq('init','987654321');
+    fbq('track','PageView');
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand: #6c63ff;
+      --brand-dark: #4f46e5;
+      --bg: #fafafa;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --console-bg: #0f172a;
+      --console-green: #34d399;
+      --console-blue: #60a5fa;
+      --console-purple: #c084fc;
+      --console-yellow: #fbbf24;
+      --console-muted: #64748b;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Site Header ── */
+    .site-header {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .site-header .logo { font-size: 1.25rem; font-weight: 700; color: var(--brand); }
+    .site-header nav a {
+      color: var(--muted);
+      text-decoration: none;
+      margin-left: 24px;
+      font-size: 0.875rem;
+    }
+    .site-header nav a:hover { color: var(--text); }
+
+    /* ── Layout ── */
+    .page {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      max-width: 1100px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+    @media (max-width: 900px) {
+      .page { grid-template-columns: 1fr; }
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, var(--brand) 0%, #9333ea 100%);
+      border-radius: 16px;
+      padding: 40px;
+      color: white;
+      margin-bottom: 24px;
+    }
+    .hero h1 { font-size: 2rem; margin-bottom: 8px; }
+    .hero p { opacity: 0.85; font-size: 1rem; margin-bottom: 24px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+    }
+    .btn-primary {
+      background: var(--brand);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--brand-dark); }
+    .btn-secondary {
+      background: white;
+      color: var(--brand);
+      border: 2px solid var(--brand);
+    }
+    .btn-secondary:hover { background: #f5f3ff; }
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 0.8rem;
+    }
+
+    /* ── Product Grid ── */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    .product-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: box-shadow 0.15s;
+    }
+    .product-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .product-img {
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+    }
+    .product-info { padding: 12px; }
+    .product-info p { font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+    .product-info strong { font-size: 0.95rem; display: block; margin-bottom: 8px; }
+    .product-info .price { font-size: 0.9rem; font-weight: 700; color: var(--brand); }
+
+    /* ── Forms ── */
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; color: var(--muted); }
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus { outline: none; border-color: var(--brand); }
+
+    /* ── Pigxel Console Panel ── */
+    .pigxel-panel {
+      position: sticky;
+      top: 24px;
+    }
+    .pigxel-panel-header {
+      background: var(--console-bg);
+      color: white;
+      padding: 14px 16px;
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .pigxel-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--console-muted);
+      animation: none;
+    }
+    .pigxel-dot.live {
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── Audit card ── */
+    .audit-card {
+      background: var(--console-bg);
+      border: 1px solid #1e293b;
+      border-top: none;
+      padding: 16px;
+    }
+    .audit-section-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--console-muted);
+      margin-bottom: 10px;
+      margin-top: 14px;
+    }
+    .audit-section-label:first-child { margin-top: 0; }
+    .audit-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #1e293b;
+    }
+    .audit-row:last-child { border-bottom: none; }
+    .audit-row-left { display: flex; align-items: center; gap: 8px; }
+    .audit-icon { font-size: 0.75rem; width: 16px; text-align: center; }
+    .audit-label { font-size: 0.8rem; color: #cbd5e1; }
+    .audit-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 9999px;
+    }
+    .badge-detected { background: rgba(16,185,129,0.15); color: #34d399; }
+    .badge-not-found { background: rgba(100,116,139,0.2); color: var(--console-muted); }
+    .badge-pending { background: rgba(251,191,36,0.15); color: var(--console-yellow); }
+    .badge-id { font-family: monospace; font-size: 0.7rem; color: var(--console-muted); }
+
+    /* ── Event log ── */
+    .event-log {
+      background: var(--console-bg);
+      border: 1px solid #1e293b;
+      border-top: 1px solid #1e2d3d;
+      padding: 12px;
+      max-height: 280px;
+      overflow-y: auto;
+      border-radius: 0 0 12px 12px;
+    }
+    .log-line {
+      font-family: 'Courier New', monospace;
+      font-size: 0.72rem;
+      line-height: 1.6;
+      padding: 3px 0;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+    }
+    .log-line:last-child { border-bottom: none; }
+    .log-time { color: var(--console-muted); flex-shrink: 0; }
+    .log-source { flex-shrink: 0; }
+    .log-msg { color: #e2e8f0; word-break: break-all; }
+    .source-pigxel { color: var(--console-purple); }
+    .source-gtag { color: var(--console-blue); }
+    .source-fbq { color: #fb923c; }
+    .source-datalayer { color: var(--console-green); }
+    .source-system { color: var(--console-muted); }
+
+    /* ── Misc ── */
+    .badge-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .tag {
+      background: #ede9fe;
+      color: var(--brand);
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-weight: 500;
+    }
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+    .spa-zone {
+      background: #fff7ed;
+      border: 1px dashed #fcd34d;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 4px;
+    }
+    #dynamic-area { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 10px; }
+    .empty-log { color: var(--console-muted); font-size: 0.75rem; font-family: monospace; padding: 4px 0; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Simulated site header ── -->
+  <header class="site-header">
+    <span class="logo">🌸 Bloom & Co</span>
+    <nav>
+      <a href="#">Shop</a>
+      <a href="#">Collections</a>
+      <a href="#">About</a>
+    </nav>
+  </header>
+
+  <div class="page">
+
+    <!-- ── Left column: simulated website ── -->
+    <div class="site-content">
+
+      <div class="hero">
+        <h1>Summer Collection 2025</h1>
+        <p>Handcrafted pieces for every occasion. Free shipping on orders over $75.</p>
+        <button class="btn" style="background:white;color:var(--brand);font-weight:700;" onclick="void(0)">
+          Shop Now
+        </button>
+        <button class="btn btn-sm" style="background:transparent;color:white;border:2px solid white;margin-left:10px;" onclick="void(0)">
+          Book a Styling Session
+        </button>
+      </div>
+
+      <!-- Products -->
+      <div class="card">
+        <h2>Featured Products</h2>
+        <div class="product-grid">
+
+          <div class="product-card">
+            <div class="product-img" style="background:#fdf4ff;">🌸</div>
+            <div class="product-info">
+              <p>Jewellery</p>
+              <strong>Rose Pendant Necklace</strong>
+              <p class="price">$89.00</p>
+              <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center;margin-top:8px;">
+                Add to Cart
+              </button>
+            </div>
+          </div>
+
+          <div class="product-card">
+            <div class="product-img" style="background:#fef9ee;">🍋</div>
+            <div class="product-info">
+              <p>Accessories</p>
+              <strong>Lemon Drop Earrings</strong>
+              <p class="price">$45.00</p>
+              <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center;margin-top:8px;">
+                Add to Cart
+              </button>
+            </div>
+          </div>
+
+          <div class="product-card">
+            <div class="product-img" style="background:#f0fdf4;">🌿</div>
+            <div class="product-info">
+              <p>Skincare</p>
+              <strong>Botanical Face Oil</strong>
+              <p class="price">$120.00</p>
+              <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center;margin-top:8px;">
+                Add to Cart
+              </button>
+            </div>
+          </div>
+
+          <div class="product-card">
+            <div class="product-img" style="background:#fff1f2;">🧴</div>
+            <div class="product-info">
+              <p>Skincare</p>
+              <strong>Rose Water Mist</strong>
+              <p class="price">$38.00</p>
+              <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center;margin-top:8px;">
+                Add to Cart
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="divider"></div>
+
+        <div style="text-align:center;">
+          <button class="btn btn-primary" style="min-width:200px;">
+            Buy Now — $89.00
+          </button>
+          <button class="btn btn-secondary btn-sm" style="margin-left:12px;">
+            Get Started
+          </button>
+        </div>
+      </div>
+
+      <!-- Newsletter -->
+      <div class="card">
+        <h2>Join the community</h2>
+        <p style="font-size:0.875rem;color:var(--muted);margin-bottom:16px;">
+          Get early access to new collections, styling tips, and member-only discounts.
+        </p>
+        <form id="newsletter-form">
+          <div class="form-group">
+            <label for="email">Email address</label>
+            <input type="email" id="email" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label for="name">First name</label>
+            <input type="text" id="name" placeholder="Your first name">
+          </div>
+          <button type="submit" class="btn btn-success" style="width:100%;justify-content:center;">
+            Subscribe to newsletter
+          </button>
+        </form>
+      </div>
+
+      <!-- Contact form -->
+      <div class="card">
+        <h2>Book a free consultation</h2>
+        <p style="font-size:0.875rem;color:var(--muted);margin-bottom:16px;">
+          Speak with our styling team. Sessions are 30 minutes via video call.
+        </p>
+        <form id="contact-form">
+          <div class="form-group">
+            <label for="contact-name">Your name</label>
+            <input type="text" id="contact-name" placeholder="Full name" required>
+          </div>
+          <div class="form-group">
+            <label for="contact-email">Email</label>
+            <input type="email" id="contact-email" placeholder="you@example.com" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+            Request a demo
+          </button>
+        </form>
+      </div>
+
+      <!-- SPA simulation -->
+      <div class="card">
+        <h2>Dynamic content test (SPA simulation)</h2>
+        <p style="font-size:0.875rem;color:var(--muted);margin-bottom:12px;">
+          Simulates buttons added by React or Vue after page load. Pigxel uses event delegation,
+          so it tracks these without any re-initialisation.
+        </p>
+        <div class="spa-zone">
+          <button class="btn btn-secondary btn-sm" onclick="addDynamicBtn()">
+            + Inject dynamic button
+          </button>
+          <div id="dynamic-area"></div>
+        </div>
+        <div class="badge-row" style="margin-top:12px;">
+          <span class="tag">Event delegation</span>
+          <span class="tag">SPA-safe</span>
+          <span class="tag">No re-init needed</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Right column: Pigxel audit console ── -->
+    <div class="pigxel-panel">
+      <div class="pigxel-panel-header">
+        <div class="pigxel-dot" id="status-dot"></div>
+        <span id="status-text" style="color:#64748b;">Pigxel loading…</span>
+        <span style="margin-left:auto;font-size:0.7rem;color:#64748b;font-weight:400;" id="site-id-display"></span>
+      </div>
+
+      <!-- Audit results -->
+      <div class="audit-card" id="audit-panel">
+        <div class="audit-section-label">Detected on this page</div>
+        <div id="audit-rows">
+          <div class="audit-row">
+            <div class="audit-row-left">
+              <span class="audit-icon">⏳</span>
+              <span class="audit-label" style="color:#475569;">Scanning…</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="audit-section-label" id="dl-section-label" style="display:none;">dataLayer</div>
+        <div id="datalayer-row"></div>
+
+        <div class="audit-section-label" id="suggestion-label" style="display:none;">Pigxel says</div>
+        <div id="suggestion-box"></div>
+      </div>
+
+      <!-- Event log -->
+      <div class="audit-section-label" style="background:var(--console-bg);margin:0;padding:8px 12px 6px;border-left:1px solid #1e293b;border-right:1px solid #1e293b;color:var(--console-muted);">
+        Live event log
+      </div>
+      <div class="event-log" id="event-log">
+        <div class="empty-log">No events yet — interact with the page above</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============================================================
+    PIGXEL SCRIPT
+    Uses client_active (seeded in Firestore emulator — status: active)
+    Points to the local emulator via data-api
+  ============================================================ -->
+  <script
+    src="http://localhost:8000/pigxel.js?id=test-ndwxvmjz&debug=true"
+    data-api="http://127.0.0.1:5001/pixie-dev/us-central1"
+  ></script>
+
+  <!-- ============================================================
+    TEST UTILITIES
+    Intercept dataLayer, gtag, and fbq to show what is happening
+    in the Pigxel console panel on the right.
+  ============================================================ -->
+  <script>
+  (function () {
+
+    // ── Helpers ──────────────────────────────────────────
+    var logEl = document.getElementById('event-log');
+    var firstLog = true;
+
+    function ts() {
+      return new Date().toLocaleTimeString('en-GB', { hour12: false });
+    }
+
+    function log(sourceClass, sourceLabel, msg) {
+      if (firstLog) { logEl.innerHTML = ''; firstLog = false; }
+      var line = document.createElement('div');
+      line.className = 'log-line';
+      line.innerHTML =
+        '<span class="log-time">' + ts() + '</span>' +
+        '<span class="log-source ' + sourceClass + '">[' + sourceLabel + ']</span>' +
+        '<span class="log-msg">' + msg + '</span>';
+      logEl.prepend(line);
+      while (logEl.children.length > 30) logEl.removeChild(logEl.lastChild);
+    }
+
+    // ── Intercept dataLayer.push ──────────────────────────
+    var _push = Array.prototype.push;
+    window.dataLayer = window.dataLayer || [];
+    Object.defineProperty(window.dataLayer, 'push', {
+      value: function () {
+        var result = _push.apply(this, arguments);
+        for (var i = 0; i < arguments.length; i++) {
+          var item = arguments[i];
+          if (item && typeof item === 'object' && item.event) {
+            log('source-datalayer', 'dataLayer', 'push → event: <strong>' + item.event + '</strong>' +
+              (item.pigxel_platform ? ' (via Pigxel, platform: ' + item.pigxel_platform + ')' : '')
+            );
+          }
+        }
+        return result;
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    // ── Intercept gtag ────────────────────────────────────
+    var _originalGtag = window.gtag;
+    window.gtag = function () {
+      if (arguments[0] === 'event') {
+        log('source-gtag', 'gtag', 'event → <strong>' + arguments[1] + '</strong>' +
+          (arguments[2] ? ' ' + JSON.stringify(arguments[2]) : '')
+        );
+      }
+      if (_originalGtag) return _originalGtag.apply(this, arguments);
+      dataLayer.push(Array.from(arguments));
+    };
+
+    // ── Intercept fbq ─────────────────────────────────────
+    var _originalFbq = window.fbq;
+    window.fbq = function () {
+      if (arguments[0] === 'track' && arguments[1] !== 'PageView') {
+        log('source-fbq', 'fbq', arguments[0] + ' → <strong>' + arguments[1] + '</strong>' +
+          (arguments[2] ? ' ' + JSON.stringify(arguments[2]) : '')
+        );
+      }
+      if (_originalFbq) return _originalFbq.apply(this, arguments);
+    };
+
+    // ── Intercept console.log for [Pigxel] messages ────────
+    var _originalLog = console.log;
+    var pixieSiteStatus = null; // captured from Pigxel's own log
+    console.log = function () {
+      _originalLog.apply(console, arguments);
+      var msg = Array.from(arguments).join(' ');
+      if (msg.includes('[Pigxel]')) {
+        log('source-pigxel', 'Pigxel', msg.replace('[Pigxel] ', ''));
+        // Capture site status from Pigxel's status log line
+        if (msg.includes('Status:')) {
+          if (msg.includes('ACTIVE')) pixieSiteStatus = 'active';
+          else if (msg.includes('PENDING')) pixieSiteStatus = 'pending';
+          else if (msg.includes('PAUSED')) pixieSiteStatus = 'paused';
+        }
+      }
+    };
+
+    // ── Build audit UI after Pigxel reports ────────────────
+    // We poll for the audit result being written to the page
+    // by reading the DOM-intercepted console messages and the
+    // known pixel stubs we set up above.
+
+    function buildAuditUI() {
+      var dot = document.getElementById('status-dot');
+      var statusText = document.getElementById('status-text');
+      var auditRows = document.getElementById('audit-rows');
+      var dlSectionLabel = document.getElementById('dl-section-label');
+      var dlRow = document.getElementById('datalayer-row');
+      var suggLabel = document.getElementById('suggestion-label');
+      var suggBox = document.getElementById('suggestion-box');
+      var siteIdDisplay = document.getElementById('site-id-display');
+
+      // Gather what is actually present on the page
+      var hasGTM = !!Array.from(document.scripts).find(function(s) {
+        return s.src && s.src.includes('googletagmanager.com/gtm.js');
+      });
+      var hasGA4 = !!Array.from(document.scripts).find(function(s) {
+        return s.src && s.src.includes('googletagmanager.com/gtag/js');
+      }) || typeof window.gtag === 'function';
+      var hasMeta = typeof window.fbq === 'function';
+      var hasTTQ = typeof window.ttq !== 'undefined';
+      var hasLinkedIn = typeof window._linkedin_data_partner_ids !== 'undefined';
+      var hasDataLayer = Array.isArray(window.dataLayer);
+      var dataLayerHealthy = hasDataLayer && window.dataLayer.length > 0;
+      var ga4Id = hasGA4 ? 'G-DEMO12345' : null;
+      var metaId = hasMeta && window.fbq._fbevents && window.fbq._fbevents[0] ? window.fbq._fbevents[0].pixelId : null;
+
+      siteIdDisplay.textContent = 'id: test-ndwxvmjz';
+
+      // Status header — reflect actual Pigxel site status
+      var statusColors = { active: '#34d399', pending: '#fbbf24', paused: '#64748b' };
+      var statusLabels = { active: 'Live — forwarding events', pending: 'Setup Required — audit only', paused: 'Paused — audit only' };
+      var resolvedStatus = pixieSiteStatus || 'pending';
+      dot.classList.add('live');
+      dot.style.background = statusColors[resolvedStatus] || '#64748b';
+      statusText.textContent = statusLabels[resolvedStatus] || 'Audit complete';
+      statusText.style.color = statusColors[resolvedStatus] || '#34d399';
+
+      // Pixel rows
+      function makeRow(icon, label, detected, detail) {
+        return '<div class="audit-row">' +
+          '<div class="audit-row-left">' +
+          '<span class="audit-icon">' + icon + '</span>' +
+          '<span class="audit-label">' + label + '</span>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:6px;">' +
+          (detail ? '<span class="badge-id">' + detail + '</span>' : '') +
+          '<span class="audit-badge ' + (detected ? 'badge-detected' : 'badge-not-found') + '">' +
+          (detected ? 'Detected' : 'Not found') + '</span>' +
+          '</div>' +
+          '</div>';
+      }
+
+      auditRows.innerHTML =
+        makeRow('🏷', 'Google Tag Manager', hasGTM, null) +
+        makeRow('📊', 'Google Analytics 4', hasGA4, ga4Id) +
+        makeRow('📘', 'Meta Pixel', hasMeta, metaId) +
+        makeRow('🎵', 'TikTok Pixel', hasTTQ, null) +
+        makeRow('💼', 'LinkedIn Insight', hasLinkedIn, null);
+
+      // dataLayer section
+      dlSectionLabel.style.display = '';
+      dlRow.innerHTML = '<div class="audit-row">' +
+        '<div class="audit-row-left">' +
+        '<span class="audit-icon">' + (hasDataLayer ? '✅' : '❌') + '</span>' +
+        '<span class="audit-label">' +
+        (hasDataLayer
+          ? (dataLayerHealthy ? 'dataLayer active (' + window.dataLayer.length + ' entries)' : 'dataLayer present (empty)')
+          : 'No dataLayer found') +
+        '</span>' +
+        '</div>' +
+        '<span class="audit-badge ' + (hasDataLayer ? 'badge-detected' : 'badge-not-found') + '">' +
+        (hasDataLayer ? 'Healthy' : 'Missing') + '</span>' +
+        '</div>';
+
+      // Suggestions
+      suggLabel.style.display = '';
+      var suggestions = [];
+      // Add status-aware message at the top
+      if (resolvedStatus === 'pending') {
+        suggestions.push('⚠️ Site is <strong>Setup Required</strong>. Pigxel is auditing your page but will not forward events yet. Go to your Pigxel dashboard, complete setup, and turn tracking Live.');
+      } else if (resolvedStatus === 'paused') {
+        suggestions.push('⏸️ Site is <strong>Paused</strong>. Pigxel is auditing but event forwarding is off. Toggle tracking Live in the dashboard to re-enable it.');
+      }
+      if (hasDataLayer) {
+        suggestions.push('✅ Events will be forwarded via <strong>dataLayer</strong> for maximum accuracy. GTM will route them to your configured destinations.');
+      }
+      if (!hasGTM && hasGA4) {
+        suggestions.push('💡 GA4 is loaded directly. Consider adding <strong>Google Tag Manager</strong> so all tracking is managed in one place.');
+      }
+      if (!hasMeta) {
+        suggestions.push('ℹ️ No Meta Pixel detected. Add one to track Facebook and Instagram ad conversions.');
+      }
+      if (suggestions.length === 0) {
+        suggestions.push('⚠️ No tracking pixels found on this page. Set up Google Analytics 4 or Meta Pixel directly, then Pigxel will detect them automatically.');
+      }
+      suggBox.innerHTML = suggestions.map(function(s) {
+        return '<div style="font-size:0.75rem;color:#94a3b8;padding:6px 0;border-bottom:1px solid #1e293b;line-height:1.5;">' + s + '</div>';
+      }).join('');
+    }
+
+    // Wait for Pigxel to finish initialising then build the UI
+    window.addEventListener('load', function () {
+      setTimeout(buildAuditUI, 800);
+    });
+
+    // ── SPA dynamic button ────────────────────────────────
+    var btnCount = 0;
+    window.addDynamicBtn = function () {
+      btnCount++;
+      var btn = document.createElement('button');
+      btn.className = 'btn btn-primary btn-sm';
+      btn.textContent = 'Buy Now — dynamic #' + btnCount;
+      document.getElementById('dynamic-area').appendChild(btn);
+      log('source-system', 'DOM', 'Dynamic button #' + btnCount + ' injected via JS');
+    };
+
+    // ── Prevent real form submissions in demo ─────────────
+    document.getElementById('newsletter-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      setTimeout(function () {
+        log('source-system', 'Form', 'newsletter-form submit prevented (demo mode)');
+      }, 150);
+    });
+    document.getElementById('contact-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      setTimeout(function () {
+        log('source-system', 'Form', 'contact-form submit prevented (demo mode)');
+      }, 150);
+    });
+
+  })();
+  </script>
+
+</body>
+</html>

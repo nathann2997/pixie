@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Pixie Configuration Schema",
-  "description": "Configuration format for Pixie AI Marketing Agent",
+  "title": "Pigxel Configuration Schema",
+  "description": "Configuration format for Pigxel Marketing Tracking Agent",
   "type": "object",
   "required": ["pixels", "events"],
   "properties": {
