@@ -535,7 +535,7 @@ export const reportAudit = functions.https.onRequest(
  */
 export const healthCheck = functions.https.onRequest(
   {
-    cors: true,
+    cors: ['https://pixie-b5d33.web.app', 'http://localhost:3000'],
     region: 'us-central1',
   },
   async (req, res) => {
