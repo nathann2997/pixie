@@ -235,8 +235,29 @@ export default function EventsPage() {
     return (
       <AuthGuard>
         <SidebarLayout>
-          <div className="flex h-full items-center justify-center min-h-[60vh]">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-rose-400 border-t-transparent" />
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 lg:py-10">
+            <div className="flex items-center justify-between mb-6 animate-pulse">
+              <div className="space-y-2">
+                <div className="h-6 bg-slate-100 rounded w-24" />
+                <div className="h-3 bg-slate-100 rounded w-40" />
+              </div>
+              <div className="h-9 w-28 bg-slate-100 rounded-lg" />
+            </div>
+            <div className="h-10 bg-slate-100 rounded-lg mb-6 animate-pulse" />
+            <div className="space-y-2.5">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white border border-slate-200 rounded-xl p-4 animate-pulse">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-slate-100" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-4 bg-slate-100 rounded w-1/3" />
+                      <div className="h-3 bg-slate-100 rounded w-1/2" />
+                    </div>
+                    <div className="h-6 w-16 bg-slate-100 rounded-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </SidebarLayout>
       </AuthGuard>
