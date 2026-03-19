@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
@@ -128,6 +128,7 @@ export default function EventsPage() {
   const [deletingIdx,     setDeletingIdx]    = useState<number | null>(null);
   const [scanLoading,     setScanLoading]    = useState(false);
   const [scanError,       setScanError]      = useState<string | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   // ── Real-time listener ───────────────────────────────────────────────────
   useEffect(() => {
@@ -142,6 +143,20 @@ export default function EventsPage() {
     );
     return () => unsub();
   }, [siteId]);
+
+  // Keyboard shortcut: "/" to focus search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const active = document.activeElement;
+        if (active?.tagName === "INPUT" || active?.tagName === "TEXTAREA" || active?.getAttribute("contenteditable")) return;
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
 
   // ── Derived ──────────────────────────────────────────────────────────────
   const allEvents: ConversionEvent[] = site?.trackingConfig?.events ?? [];
@@ -330,12 +345,18 @@ export default function EventsPage() {
                   <div className="relative mb-4">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                     <input
+                      ref={searchRef}
                       type="text"
                       placeholder="Search events…"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pl-9 pr-9 h-10 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400/20 focus:border-rose-400 transition-colors"
                     />
+                    {!searchQuery && (
+                      <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-mono text-slate-400">
+                        /
+                      </kbd>
+                    )}
                     {searchQuery && (
                       <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
                         <X className="h-4 w-4" />
