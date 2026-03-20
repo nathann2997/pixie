@@ -15,6 +15,8 @@ import { NeonButton } from "@/components/ui/neon-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { normalizeEvents, type EventRule } from "@/lib/normalize-event";
+import { type Platform, PLATFORMS } from "@/lib/platform-events";
 import {
   Plus,
   Search,
@@ -79,7 +81,7 @@ interface SiteAnalysis {
 
 interface TrackingConfig {
   pixels: { ga4?: string; meta?: string; tiktok?: string; linkedin?: string; google_ads?: string };
-  events: ConversionEvent[];
+  events: EventRule[];
 }
 
 interface SiteData {
@@ -95,22 +97,22 @@ interface SiteData {
 
 // ─── Platform tabs ────────────────────────────────────────────────────────────
 
-const ALL_PLATFORMS = [
-  { key: "all",      label: "All",        icon: Layers    },
-  { key: "ga4",      label: "GA4",        icon: BarChart2 },
-  { key: "meta",     label: "Meta",       icon: Share2    },
-  { key: "both",     label: "GA4 + Meta", icon: null      },
-  { key: "tiktok",   label: "TikTok",     icon: null      },
-  { key: "linkedin", label: "LinkedIn",   icon: null      },
+const ALL_PLATFORM_TABS = [
+  { key: "all",        label: "All",        icon: Layers    },
+  { key: "ga4",        label: "GA4",        icon: BarChart2 },
+  { key: "meta",       label: "Meta",       icon: Share2    },
+  { key: "tiktok",     label: "TikTok",     icon: null      },
+  { key: "linkedin",   label: "LinkedIn",   icon: null      },
+  { key: "google_ads", label: "Google Ads",  icon: null      },
 ];
 
 const PLATFORM_COLORS: Record<string, { active: string; count: string }> = {
-  all:      { active: "bg-rose-50 border-rose-200 text-rose-600",      count: "bg-rose-100 text-rose-600" },
-  ga4:      { active: "bg-blue-50 border-blue-200 text-blue-600",      count: "bg-blue-100 text-blue-600" },
-  meta:     { active: "bg-indigo-50 border-indigo-200 text-indigo-600", count: "bg-indigo-100 text-indigo-600" },
-  both:     { active: "bg-violet-50 border-violet-200 text-violet-600", count: "bg-violet-100 text-violet-600" },
-  tiktok:   { active: "bg-slate-100 border-slate-400 text-slate-800",  count: "bg-slate-200 text-slate-700" },
-  linkedin: { active: "bg-sky-50 border-sky-200 text-sky-600",         count: "bg-sky-100 text-sky-600" },
+  all:        { active: "bg-rose-50 border-rose-200 text-rose-600",      count: "bg-rose-100 text-rose-600" },
+  ga4:        { active: "bg-blue-50 border-blue-200 text-blue-600",      count: "bg-blue-100 text-blue-600" },
+  meta:       { active: "bg-indigo-50 border-indigo-200 text-indigo-600", count: "bg-indigo-100 text-indigo-600" },
+  tiktok:     { active: "bg-slate-100 border-slate-400 text-slate-800",  count: "bg-slate-200 text-slate-700" },
+  linkedin:   { active: "bg-sky-50 border-sky-200 text-sky-600",         count: "bg-sky-100 text-sky-600" },
+  google_ads: { active: "bg-amber-50 border-amber-200 text-amber-600",  count: "bg-amber-100 text-amber-600" },
 };
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -125,7 +127,7 @@ export default function EventsPage() {
   const [searchQuery,     setSearchQuery]    = useState("");
   const [activePlatform,  setActivePlatform] = useState("all");
   const [addEventOpen,    setAddEventOpen]   = useState(false);
-  const [deletingIdx,     setDeletingIdx]    = useState<number | null>(null);
+  const [deletingId,      setDeletingId]     = useState<string | null>(null);
   const [scanLoading,     setScanLoading]    = useState(false);
   const [scanError,       setScanError]      = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -136,7 +138,17 @@ export default function EventsPage() {
     const unsub = onSnapshot(
       doc(db, "sites", siteId),
       (snap) => {
-        setSite(snap.exists() ? ({ id: snap.id, ...snap.data() } as SiteData) : null);
+        if (snap.exists()) {
+          const raw = snap.data();
+          const events = normalizeEvents(raw.trackingConfig?.events ?? []);
+          setSite({
+            id: snap.id,
+            ...raw,
+            trackingConfig: { ...raw.trackingConfig, events },
+          } as SiteData);
+        } else {
+          setSite(null);
+        }
         setLoading(false);
       },
       () => setLoading(false)
@@ -159,29 +171,33 @@ export default function EventsPage() {
   }, []);
 
   // ── Derived ──────────────────────────────────────────────────────────────
-  const allEvents: ConversionEvent[] = site?.trackingConfig?.events ?? [];
+  const allEvents: EventRule[] = site?.trackingConfig?.events ?? [];
   const suggested: SuggestedEvent[]  = site?.suggested_events ?? [];
   const config = site?.trackingConfig ?? { pixels: {}, events: [] };
 
   const visiblePlatforms = useMemo(() => {
-    const used = new Set(allEvents.map((e) => e.platform));
-    return ALL_PLATFORMS.filter((p) => p.key === "all" || used.has(p.key));
+    const used = new Set(allEvents.flatMap((e) => e.platforms));
+    return ALL_PLATFORM_TABS.filter((p) => p.key === "all" || used.has(p.key));
   }, [allEvents]);
 
   const platformCounts = useMemo(() => {
     const counts: Record<string, number> = { all: allEvents.length };
-    allEvents.forEach((e) => { counts[e.platform] = (counts[e.platform] ?? 0) + 1; });
+    allEvents.forEach((e) => {
+      for (const p of e.platforms) {
+        counts[p] = (counts[p] ?? 0) + 1;
+      }
+    });
     return counts;
   }, [allEvents]);
 
   const filteredEvents = useMemo(() => {
     let evs = allEvents;
-    if (activePlatform !== "all") evs = evs.filter((e) => e.platform === activePlatform);
+    if (activePlatform !== "all") evs = evs.filter((e) => e.platforms.includes(activePlatform as Platform));
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       evs = evs.filter(
         (e) =>
-          e.event_name.toLowerCase().includes(q) ||
+          e.displayName.toLowerCase().includes(q) ||
           e.selector.toLowerCase().includes(q) ||
           (e.description ?? "").toLowerCase().includes(q)
       );
@@ -189,17 +205,12 @@ export default function EventsPage() {
     return evs;
   }, [allEvents, activePlatform, searchQuery]);
 
-  const filteredWithIndex = useMemo(
-    () => filteredEvents.map((e) => ({ event: e, originalIndex: allEvents.indexOf(e) })),
-    [filteredEvents, allEvents]
-  );
-
   // ── Handlers ─────────────────────────────────────────────────────────────
-  const handleDelete = async (originalIndex: number) => {
+  const handleDelete = async (eventId: string) => {
     if (!site) return;
-    setDeletingIdx(originalIndex);
+    setDeletingId(eventId);
     try {
-      const updated = allEvents.filter((_, i) => i !== originalIndex);
+      const updated = allEvents.filter((e) => e.id !== eventId);
       await updateDoc(doc(db, "sites", siteId), {
         trackingConfig: { ...site.trackingConfig, events: updated },
       });
@@ -207,7 +218,7 @@ export default function EventsPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to remove event");
     } finally {
-      setDeletingIdx(null);
+      setDeletingId(null);
     }
   };
 
@@ -419,7 +430,7 @@ export default function EventsPage() {
                   </div>
 
                   {/* Events */}
-                  {filteredWithIndex.length === 0 ? (
+                  {filteredEvents.length === 0 ? (
                     <div className="bg-white border border-slate-200 rounded-xl p-10 text-center">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 mx-auto mb-3">
                         {searchQuery ? <Search className="h-4 w-4 text-slate-400" /> : <Target className="h-4 w-4 text-slate-400" />}
@@ -427,7 +438,7 @@ export default function EventsPage() {
                       <p className="text-sm font-medium text-slate-700 mb-1">
                         {searchQuery
                           ? `No results for "${searchQuery}"`
-                          : `No events for ${ALL_PLATFORMS.find((p) => p.key === activePlatform)?.label ?? activePlatform}`}
+                          : `No events for ${ALL_PLATFORM_TABS.find((p) => p.key === activePlatform)?.label ?? activePlatform}`}
                       </p>
                       <p className="text-xs text-slate-400">
                         {searchQuery ? "Try a different search term." : "Add an event and assign it to this platform."}
@@ -440,19 +451,27 @@ export default function EventsPage() {
                     </div>
                   ) : (
                     <div className="space-y-2.5">
-                      {filteredWithIndex.map(({ event, originalIndex }) => (
+                      {filteredEvents.map((event) => (
                         <ConversionCard
-                          key={originalIndex}
-                          event={event}
-                          index={originalIndex}
-                          onDelete={handleDelete}
-                          deleting={deletingIdx === originalIndex}
+                          key={event.id}
+                          event={{
+                            selector: event.selector,
+                            trigger: event.trigger,
+                            platform: event.platforms[0] ?? 'ga4',
+                            event_name: event.displayName,
+                            description: event.description,
+                            google_ads_conversion_label: event.platformFields?.google_ads_conversion_label,
+                            linkedin_conversion_id: event.platformFields?.linkedin_conversion_id,
+                          }}
+                          index={0}
+                          onDelete={() => handleDelete(event.id)}
+                          deleting={deletingId === event.id}
                           siteUrl={site.url}
                         />
                       ))}
-                      {searchQuery && filteredWithIndex.length > 0 && (
+                      {searchQuery && filteredEvents.length > 0 && (
                         <p className="text-xs text-slate-400 text-center pt-2">
-                          {filteredWithIndex.length} result{filteredWithIndex.length !== 1 ? "s" : ""} for &ldquo;{searchQuery}&rdquo;
+                          {filteredEvents.length} result{filteredEvents.length !== 1 ? "s" : ""} for &ldquo;{searchQuery}&rdquo;
                         </p>
                       )}
                     </div>
