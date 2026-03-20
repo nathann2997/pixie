@@ -44,7 +44,8 @@ export interface TrackingEventRule {
 
 export interface CurrentTrackingConfig {
   pixels: { ga4?: string; meta?: string; tiktok?: string; linkedin?: string; google_ads?: string };
-  events: TrackingEventRule[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  events: any[];
 }
 
 export interface SuggestedRulesListProps {
