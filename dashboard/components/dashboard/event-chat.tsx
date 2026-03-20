@@ -41,7 +41,8 @@ interface EventDraft {
 
 interface TrackingConfig {
   pixels: { ga4?: string; meta?: string; tiktok?: string; linkedin?: string; google_ads?: string };
-  events: Array<Record<string, unknown>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  events: any[];
 }
 
 interface EventChatProps {
