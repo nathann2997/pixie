@@ -1,20 +1,89 @@
 "use client";
 
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import type { ParamDef } from "@/lib/platform-events";
 import { CURRENCY_CODES } from "@/lib/platform-events";
+import {
+  DynamicValueConfig,
+  type ValueSource,
+  type ValueTransform,
+} from "./dynamic-value-config";
 
 export interface EventParamFieldProps {
   param: ParamDef;
   value: string | number | boolean;
-  onChange: (key: string, value: string | number | boolean) => void;
+  valueSource?: "static" | "data_attribute" | "css_selector" | "json_ld";
+  dynamicConfig?: {
+    selector: string;
+    transform: "as_is" | "strip_currency" | "parse_number";
+  };
+  onChange: (
+    key: string,
+    value: string | number | boolean,
+    valueSource?: string,
+    dynamicConfig?: object
+  ) => void;
 }
 
-export function EventParamField({ param, value, onChange }: EventParamFieldProps) {
+export function EventParamField({
+  param,
+  value,
+  valueSource = "static",
+  dynamicConfig,
+  onChange,
+}: EventParamFieldProps) {
   const id = `param-${param.key}`;
+
+  // Determine initial mode for number fields
+  const isDynamic =
+    param.type === "number" &&
+    valueSource !== "static" &&
+    valueSource !== undefined;
+
+  const [numberMode, setNumberMode] = useState<"static" | "dynamic">(
+    isDynamic ? "dynamic" : "static"
+  );
+
+  // Dynamic config local state (seeded from props)
+  const [dynSource, setDynSource] = useState<ValueSource>(
+    (valueSource !== "static" ? valueSource : "data_attribute") as ValueSource
+  );
+  const [dynSelector, setDynSelector] = useState(
+    dynamicConfig?.selector ?? ""
+  );
+  const [dynTransform, setDynTransform] = useState<ValueTransform>(
+    dynamicConfig?.transform ?? "as_is"
+  );
+
+  const handleModeSwitch = (mode: "static" | "dynamic") => {
+    setNumberMode(mode);
+    if (mode === "static") {
+      onChange(param.key, "", "static");
+    } else {
+      onChange(param.key, "", dynSource, {
+        selector: dynSelector,
+        transform: dynTransform,
+      });
+    }
+  };
+
+  const handleDynamicChange = (config: {
+    source: ValueSource;
+    selector: string;
+    transform: ValueTransform;
+  }) => {
+    setDynSource(config.source);
+    setDynSelector(config.selector);
+    setDynTransform(config.transform);
+    onChange(param.key, "", config.source, {
+      selector: config.selector,
+      transform: config.transform,
+    });
+  };
 
   return (
     <div className="space-y-1.5">
@@ -24,6 +93,34 @@ export function EventParamField({ param, value, onChange }: EventParamFieldProps
         </Label>
         {param.required && (
           <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
+        )}
+        {param.type === "number" && (
+          <div className="ml-auto flex items-center rounded-md border border-slate-200 bg-slate-100 p-0.5">
+            <button
+              type="button"
+              onClick={() => handleModeSwitch("static")}
+              className={cn(
+                "rounded px-2 py-0.5 text-xs font-medium transition-colors",
+                numberMode === "static"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              )}
+            >
+              Static
+            </button>
+            <button
+              type="button"
+              onClick={() => handleModeSwitch("dynamic")}
+              className={cn(
+                "rounded px-2 py-0.5 text-xs font-medium transition-colors",
+                numberMode === "dynamic"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              )}
+            >
+              Dynamic
+            </button>
+          </div>
         )}
       </div>
 
@@ -46,7 +143,7 @@ export function EventParamField({ param, value, onChange }: EventParamFieldProps
         </select>
       )}
 
-      {param.type === "number" && (
+      {param.type === "number" && numberMode === "static" && (
         <Input
           id={id}
           type="number"
@@ -55,9 +152,18 @@ export function EventParamField({ param, value, onChange }: EventParamFieldProps
           value={value === "" || value === undefined ? "" : String(value)}
           onChange={(e) => {
             const v = e.target.value;
-            onChange(param.key, v === "" ? "" : Number(v));
+            onChange(param.key, v === "" ? "" : Number(v), "static");
           }}
           className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20 h-9 rounded-lg"
+        />
+      )}
+
+      {param.type === "number" && numberMode === "dynamic" && (
+        <DynamicValueConfig
+          source={dynSource}
+          selector={dynSelector}
+          transform={dynTransform}
+          onChange={handleDynamicChange}
         />
       )}
 
