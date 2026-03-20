@@ -41,15 +41,7 @@ interface EventDraft {
 
 interface TrackingConfig {
   pixels: { ga4?: string; meta?: string; tiktok?: string; linkedin?: string; google_ads?: string };
-  events: Array<{
-    selector: string;
-    trigger: string;
-    platform: string;
-    event_name: string;
-    description?: string;
-    google_ads_conversion_label?: string;
-    linkedin_conversion_id?: string;
-  }>;
+  events: Array<Record<string, unknown>>;
 }
 
 interface EventChatProps {
