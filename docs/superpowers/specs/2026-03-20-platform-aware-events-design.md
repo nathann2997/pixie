@@ -47,7 +47,6 @@ interface PlatformConfig {
   label: string;
   icon: string;                       // Lucide icon name or brand SVG
   namingConvention: 'snake_case' | 'PascalCase' | 'fixed';
-  firingPrefix: string;               // e.g., "gtag('event'," / "fbq('track',"
   supportsCustomEvents: boolean;
   extraFields: PlatformField[];       // Fields required when this platform is selected
 }
@@ -76,41 +75,41 @@ interface PlatformField {
 
 **E-commerce:**
 
-| ID | GA4 | Meta | TikTok | Description |
-|----|-----|------|--------|-------------|
-| `purchase` | `purchase` | `Purchase` | `Purchase` | Transaction completed |
-| `add_to_cart` | `add_to_cart` | `AddToCart` | `AddToCart` | Item added to cart |
-| `view_item` | `view_item` | `ViewContent` | `ViewContent` | Product page viewed |
-| `begin_checkout` | `begin_checkout` | `InitiateCheckout` | `InitiateCheckout` | Checkout started |
-| `add_payment_info` | `add_payment_info` | `AddPaymentInfo` | `AddPaymentInfo` | Payment info entered |
-| `add_to_wishlist` | `add_to_wishlist` | `AddToWishlist` | `AddToWishlist` | Item wishlisted |
-| `remove_from_cart` | `remove_from_cart` | — | — | Item removed from cart |
-| `view_cart` | `view_cart` | — | — | Cart page viewed |
-| `add_shipping_info` | `add_shipping_info` | — | — | Shipping info entered |
-| `refund` | `refund` | — | — | Purchase refunded |
+| ID | GA4 | Meta | TikTok | LinkedIn | Google Ads | Description |
+|----|-----|------|--------|----------|------------|-------------|
+| `purchase` | `purchase` | `Purchase` | `Purchase` | `conversion_id` | `conversion` | Transaction completed |
+| `add_to_cart` | `add_to_cart` | `AddToCart` | `AddToCart` | `conversion_id` | `conversion` | Item added to cart |
+| `view_item` | `view_item` | `ViewContent` | `ViewContent` | — | — | Product page viewed |
+| `begin_checkout` | `begin_checkout` | `InitiateCheckout` | `InitiateCheckout` | — | `conversion` | Checkout started |
+| `add_payment_info` | `add_payment_info` | `AddPaymentInfo` | `AddPaymentInfo` | — | — | Payment info entered |
+| `add_to_wishlist` | `add_to_wishlist` | `AddToWishlist` | `AddToWishlist` | — | — | Item wishlisted |
+| `remove_from_cart` | `remove_from_cart` | — | — | — | — | Item removed from cart |
+| `view_cart` | `view_cart` | — | — | — | — | Cart page viewed |
+| `add_shipping_info` | `add_shipping_info` | — | — | — | — | Shipping info entered |
+| `refund` | `refund` | — | — | — | — | Purchase refunded |
 
 **Lead Generation:**
 
-| ID | GA4 | Meta | TikTok | Description |
-|----|-----|------|--------|-------------|
-| `generate_lead` | `generate_lead` | `Lead` | `Lead` | Lead form submitted |
-| `sign_up` | `sign_up` | `CompleteRegistration` | `CompleteRegistration` | Account created |
-| `contact` | `contact` | `Contact` | `Contact` | User contacted business |
-| `subscribe` | `subscribe` | — | `Subscribe` | Newsletter/service subscribed |
-| `start_trial` | — | `StartTrial` | `StartTrial` | Trial started |
-| `submit_application` | — | `SubmitApplication` | `SubmitApplication` | Application submitted |
+| ID | GA4 | Meta | TikTok | LinkedIn | Google Ads | Description |
+|----|-----|------|--------|----------|------------|-------------|
+| `generate_lead` | `generate_lead` | `Lead` | `Lead` | `conversion_id` | `conversion` | Lead form submitted |
+| `sign_up` | `sign_up` | `CompleteRegistration` | `CompleteRegistration` | `conversion_id` | `conversion` | Account created |
+| `contact` | `contact` | `Contact` | `Contact` | `conversion_id` | `conversion` | User contacted business |
+| `subscribe` | `subscribe` | — | `Subscribe` | — | — | Newsletter/service subscribed |
+| `start_trial` | — | `StartTrial` | `StartTrial` | — | `conversion` | Trial started |
+| `submit_application` | — | `SubmitApplication` | `SubmitApplication` | — | — | Application submitted |
 
 **Engagement:**
 
-| ID | GA4 | Meta | TikTok | Description |
-|----|-----|------|--------|-------------|
-| `search` | `search` | `Search` | `Search` | Site search performed |
-| `share` | `share` | — | — | Content shared |
-| `login` | `login` | — | — | User logged in |
-| `download` | — | — | `Download` | File downloaded |
-| `find_location` | — | `FindLocation` | — | Location searched |
+| ID | GA4 | Meta | TikTok | LinkedIn | Google Ads | Description |
+|----|-----|------|--------|----------|------------|-------------|
+| `search` | `search` | `Search` | `Search` | — | — | Site search performed |
+| `share` | `share` | — | — | — | — | Content shared |
+| `login` | `login` | — | — | — | — | User logged in |
+| `download` | — | — | `Download` | — | — | File downloaded |
+| `find_location` | — | `FindLocation` | — | — | — | Location searched |
 
-A `—` means the platform has no standard equivalent. For multi-platform events, platforms without a standard mapping are silently skipped (or user can provide a custom name).
+**Key:** A `—` means the platform has no standard equivalent and is silently skipped. LinkedIn always uses `conversion_id` (the user-provided ID routes to the right conversion action). Google Ads always fires `conversion` (differentiated by the `send_to` label).
 
 ### Required & Common Parameters Per Event
 
@@ -255,7 +254,12 @@ interface EventTemplate {
   2. Platform multi-select (shared across all events)
   3. Platform-specific fields prompted once (e.g., one LinkedIn Conversion ID for all events)
   4. "Add all" button creates all checked events at once
-- Each event gets default trigger `pageview` with selector `url=/` — user can edit individually afterward
+- Each event gets a sensible default trigger based on its type:
+    - `purchase`, `begin_checkout` → `pageview` with selector `url=/thank-you` (user should customize)
+    - `add_to_cart`, `add_to_wishlist` → `click` with selector `text=Add to Cart`
+    - `generate_lead`, `contact`, `sign_up`, `subscribe` → `submit` with empty selector (user must set)
+    - `view_item`, `search`, `start_trial` → `pageview` with empty selector (user must set)
+  - Events with empty selectors are flagged as "Needs configuration" in the events list and won't fire until configured
 
 ---
 
@@ -338,15 +342,186 @@ Dynamic config is stored in the `EventParam.dynamicConfig` field (see Section 2 
 
 ---
 
+## 6. Migration & Backwards Compatibility
+
+### Existing EventRule shape (current)
+
+```typescript
+// Current shape in Firestore, pigxel.js, applyConfig.ts, eventBuilderChat.ts
+{
+  selector: string;
+  trigger: string;
+  platform: string;              // "ga4" | "meta" | "tiktok" | "both" | "all"
+  event_name: string;
+  google_ads_conversion_label?: string;
+  linkedin_conversion_id?: string;
+  description?: string;
+  script?: string;
+}
+```
+
+### Migration strategy
+
+**Lazy migration in `getSiteConfig`:** When the Cloud Function serves config, it normalizes old-format events to new format on read. No batch migration needed.
+
+```
+Old: { platform: "both", event_name: "purchase" }
+New: { platforms: ["ga4", "meta"], platformNames: { ga4: "purchase", meta: "Purchase" }, params: [] }
+```
+
+**Mapping rules:**
+- `platform: "both"` → `platforms: ["ga4", "meta"]`
+- `platform: "all"` → `platforms: ["ga4", "meta", "tiktok", "linkedin", "google_ads"]`
+- `platform: "ga4"` → `platforms: ["ga4"]`
+- `event_name` → looked up in `StandardEvent` catalog to populate `platformNames`; if not found, used as-is for all platforms
+- `google_ads_conversion_label` / `linkedin_conversion_id` → moved into `platformFields`
+
+**Dashboard reads both shapes:** The events page and event-rules-list component must handle both old and new `EventRule` shapes until all events are re-saved. A `normalizeEventRule()` utility handles this.
+
+**`eventBuilderChat.ts` output:** The `EventDraft` returned by the AI chat is adapted to the new `EventRule` shape by a `chatDraftToEventRule()` mapper in the dashboard before saving to Firestore. The Cloud Function itself does not need changes — only the dashboard's event-chat component.
+
+**`applyConfig.ts` output:** Same approach — a mapper converts the AI pipeline's `TrackingEvent` shape to the new `EventRule` shape on write.
+
+### Deprecation of `"both"` and `"all"`
+
+The following files reference `"both"` or `"all"` as platform values and must be updated:
+- `dashboard/components/dashboard/add-event-modal.tsx`
+- `dashboard/components/dashboard/event-rules-list.tsx`
+- `dashboard/components/dashboard/event-chat.tsx`
+- `dashboard/app/dashboard/[siteId]/events/page.tsx` (filter tabs)
+- `functions/src/ai/eventBuilderChat.ts` (system prompt)
+- `functions/src/ai/generatePlan.ts` (DraftEvent type)
+- `pigxel.js` (trackEvent function)
+
+After migration, `"both"` and `"all"` are only handled in the `normalizeEventRule()` compat layer.
+
+---
+
+## 7. pigxel.js Changes
+
+### New platform handlers in `trackEvent()`
+
+Add LinkedIn and Google Ads firing to the existing `trackEvent` function:
+
+```javascript
+// LinkedIn
+if (platform === 'linkedin' && typeof window.lintrk === 'function') {
+  var convId = parseInt(eventData.linkedin_conversion_id || eventData.conversion_id, 10);
+  if (convId) {
+    window.lintrk('track', { conversion_id: convId });
+    debugLog('Event sent via lintrk', convId);
+  }
+}
+
+// Google Ads
+if (platform === 'google_ads' && typeof window.gtag === 'function') {
+  var sendTo = eventData.send_to || '';
+  if (sendTo) {
+    window.gtag('event', 'conversion', {
+      send_to: sendTo,
+      value: eventData.value,
+      currency: eventData.currency,
+      transaction_id: eventData.transaction_id
+    });
+    debugLog('Google Ads conversion sent', sendTo);
+  }
+}
+```
+
+### Multi-platform event firing
+
+The `handleDOMEvent` function changes to iterate over `event.platforms[]` instead of checking a single `event.platform`:
+
+```javascript
+// Old
+trackEvent(eventConfig.platform, eventConfig.event_name);
+
+// New
+(eventConfig.platforms || [eventConfig.platform]).forEach(function (p) {
+  var name = (eventConfig.platformNames && eventConfig.platformNames[p]) || eventConfig.event_name;
+  var params = buildParams(eventConfig.params || [], p, eventConfig.platformFields || {});
+  trackEvent(p, name, params);
+});
+```
+
+This is backwards-compatible: if `platforms` is absent, it falls back to the old `platform` field.
+
+### Parameter support
+
+A new `buildParams()` function resolves static and dynamic parameters:
+
+```javascript
+function buildParams(params, platform, platformFields) {
+  var result = {};
+  params.forEach(function (p) {
+    // Skip params scoped to other platforms
+    if (p.platforms && p.platforms.indexOf(platform) === -1) return;
+
+    if (p.valueSource === 'static' || !p.valueSource) {
+      result[p.key] = p.value;
+    } else if (p.valueSource === 'css_selector' && p.dynamicConfig) {
+      var el = document.querySelector(p.dynamicConfig.selector);
+      var raw = el ? (el.textContent || el.value || '') : '';
+      result[p.key] = applyTransform(raw, p.dynamicConfig.transform);
+    } else if (p.valueSource === 'data_attribute' && p.dynamicConfig) {
+      // Walk up from matched element looking for the data attribute
+      result[p.key] = applyTransform(
+        findDataAttribute(p.dynamicConfig.selector) || '',
+        p.dynamicConfig.transform
+      );
+    } else if (p.valueSource === 'json_ld' && p.dynamicConfig) {
+      result[p.key] = applyTransform(
+        extractJsonLd(p.dynamicConfig.selector) || '',
+        p.dynamicConfig.transform
+      );
+    }
+  });
+
+  // Inject platform-specific fields
+  if (platform === 'linkedin' && platformFields.linkedin_conversion_id) {
+    result.conversion_id = parseInt(platformFields.linkedin_conversion_id, 10);
+  }
+  if (platform === 'google_ads' && platformFields.google_ads_conversion_id && platformFields.google_ads_conversion_label) {
+    result.send_to = 'AW-' + platformFields.google_ads_conversion_id + '/' + platformFields.google_ads_conversion_label;
+  }
+
+  return result;
+}
+```
+
+Helper functions `applyTransform()`, `findDataAttribute()`, `extractJsonLd()` are small utilities within the IIFE.
+
+### Platform-specific parameter key remapping
+
+For events where the parameter key differs per platform (e.g., `search_term` for GA4 vs `search_string` for Meta/TikTok), the `ParamDef.platforms` field gates which key is sent to which platform. The `buildParams()` function already skips params not scoped to the current platform. The standard events catalog defines two separate `ParamDef` entries:
+
+```typescript
+{ key: 'search_term', platforms: ['ga4'], ... }
+{ key: 'search_string', platforms: ['meta', 'tiktok'], ... }
+```
+
+Both are shown in the modal UI with a label like "Search query" and a note "(GA4: search_term · Meta/TikTok: search_string)".
+
+---
+
+## 8. Event ID Generation
+
+Event IDs use `crypto.randomUUID()` (available in all modern browsers and Node.js 19+). The events page switches from index-based operations (`handleDelete(originalIndex)`) to ID-based lookups (`handleDelete(eventId)`).
+
+For Firestore, events remain stored as an array in `trackingConfig.events[]` (no collection change), but each element now has a unique `id` field for stable referencing.
+
+---
+
 ## Implementation Phases
 
 | Phase | What | Dependencies |
 |-------|------|-------------|
-| 1 | Platform event data model (`platform-events.ts`) | None |
-| 2 | Redesigned add-event modal (standard/custom toggle, platform fields, parameters) | Phase 1 |
+| 0 | `pigxel.js` changes: LinkedIn/Google Ads handlers, multi-platform firing, `buildParams()` | None (prerequisite) |
+| 1 | Platform event data model (`platform-events.ts`) + migration utility | None |
+| 2 | Redesigned add-event modal (standard/custom toggle, platform fields, parameters) | Phase 0, 1 |
 | 3 | Event templates (`event-templates.ts` + template modal) | Phase 1, 2 |
 | 4 | Conversion value mapping (dynamic toggle on parameter fields) | Phase 2 |
-| 5 | Event testing/preview panel | Phase 2, 4 |
+| 5 | Event testing/preview panel | Phase 2 (dynamic value previews added when Phase 4 lands) |
 
 Each phase produces working, testable software independently.
 
@@ -359,3 +534,4 @@ Each phase produces working, testable software independently.
 - Consent management integration
 - A/B testing of events
 - Event deduplication logic in `pigxel.js` (the `transaction_id` / `event_id` params enable it, but the dedup logic itself is out of scope)
+- Firestore security rules update for new nested shape (review separately)
