@@ -26,6 +26,76 @@
     console.warn('[Pigxel] Non-critical error in ' + context + ':', error);
   }
 
+  // ── Parameter Helpers ──────────────────────────────────────────
+
+  function applyTransform(raw, transform) {
+    if (!transform || transform === 'as_is') return raw;
+    if (transform === 'strip_currency' || transform === 'parse_number') {
+      return parseFloat(String(raw).replace(/[^0-9.-]/g, '')) || 0;
+    }
+    return raw;
+  }
+
+  function findDataAttribute(matchedEl, attrName) {
+    var el = matchedEl;
+    var depth = 0;
+    while (el && el !== document.body && depth < 10) {
+      var val = el.getAttribute(attrName);
+      if (val !== null) return val;
+      el = el.parentElement;
+      depth++;
+    }
+    return null;
+  }
+
+  function extractJsonLd(path) {
+    try {
+      var scripts = document.querySelectorAll('script[type="application/ld+json"]');
+      for (var i = 0; i < scripts.length; i++) {
+        var data = JSON.parse(scripts[i].textContent || '{}');
+        var parts = path.split('.');
+        var val = data;
+        for (var j = 0; j < parts.length; j++) {
+          if (val == null) break;
+          val = val[parts[j]];
+        }
+        if (val !== undefined && val !== null) return String(val);
+      }
+    } catch (e) { debugLog('JSON-LD extraction failed', e); }
+    return null;
+  }
+
+  function buildParams(params, platform, platformFields, matchedEl) {
+    var result = {};
+    (params || []).forEach(function (p) {
+      if (p.platforms && p.platforms.indexOf(platform) === -1) return;
+      if (p.valueSource === 'css_selector' && p.dynamicConfig) {
+        var el = document.querySelector(p.dynamicConfig.selector);
+        var raw = el ? (el.textContent || el.value || '') : '';
+        result[p.key] = applyTransform(raw, p.dynamicConfig.transform);
+      } else if (p.valueSource === 'data_attribute' && p.dynamicConfig) {
+        result[p.key] = applyTransform(
+          findDataAttribute(matchedEl, p.dynamicConfig.selector) || '',
+          p.dynamicConfig.transform
+        );
+      } else if (p.valueSource === 'json_ld' && p.dynamicConfig) {
+        result[p.key] = applyTransform(
+          extractJsonLd(p.dynamicConfig.selector) || '',
+          p.dynamicConfig.transform
+        );
+      } else {
+        result[p.key] = p.value;
+      }
+    });
+    if (platform === 'linkedin' && platformFields && platformFields.linkedin_conversion_id) {
+      result.conversion_id = parseInt(platformFields.linkedin_conversion_id, 10);
+    }
+    if (platform === 'google_ads' && platformFields && platformFields.google_ads_conversion_id && platformFields.google_ads_conversion_label) {
+      result.send_to = 'AW-' + platformFields.google_ads_conversion_id + '/' + platformFields.google_ads_conversion_label;
+    }
+    return result;
+  }
+
   // ── Script Initialisation ────────────────────────────────────
 
   /**
@@ -295,14 +365,14 @@
         return;
       }
 
-      // 2. Direct gtag call
-      if ((platform === 'ga4' || platform === 'both') && typeof window.gtag === 'function') {
+      // 2. GA4
+      if (platform === 'ga4' && typeof window.gtag === 'function') {
         window.gtag('event', eventName, eventData);
         debugLog('Event sent via gtag', eventName);
       }
 
-      // 3. Direct fbq call
-      if ((platform === 'meta' || platform === 'both') && typeof window.fbq === 'function') {
+      // 3. Meta
+      if (platform === 'meta' && typeof window.fbq === 'function') {
         window.fbq('track', eventName, eventData);
         debugLog('Event sent via fbq', eventName);
       }
@@ -311,6 +381,29 @@
       if (platform === 'tiktok' && typeof window.ttq !== 'undefined') {
         window.ttq.track(eventName, eventData);
         debugLog('Event sent via ttq', eventName);
+      }
+
+      // 5. LinkedIn
+      if (platform === 'linkedin' && typeof window.lintrk === 'function') {
+        var convId = eventData.conversion_id;
+        if (convId) {
+          window.lintrk('track', { conversion_id: convId });
+          debugLog('Event sent via lintrk', convId);
+        }
+      }
+
+      // 6. Google Ads
+      if (platform === 'google_ads' && typeof window.gtag === 'function') {
+        var sendTo = eventData.send_to;
+        if (sendTo) {
+          window.gtag('event', 'conversion', {
+            send_to: sendTo,
+            value: eventData.value,
+            currency: eventData.currency,
+            transaction_id: eventData.transaction_id
+          });
+          debugLog('Google Ads conversion sent', sendTo);
+        }
       }
 
     } catch (error) {
@@ -373,7 +466,12 @@
 
         if (href.includes(pattern) || pathname.includes(pattern)) {
           debugLog('URL rule matched', { pattern: pattern, event: eventConfig.event_name });
-          trackEvent(eventConfig.platform, eventConfig.event_name);
+          var platforms = eventConfig.platforms || [eventConfig.platform];
+          platforms.forEach(function (p) {
+            var name = (eventConfig.platformNames && eventConfig.platformNames[p]) || eventConfig.event_name;
+            var params = buildParams(eventConfig.params || [], p, eventConfig.platformFields || {}, null);
+            trackEvent(p, name, params);
+          });
         }
       });
     } catch (error) {
@@ -427,12 +525,19 @@
             trigger: eventConfig.trigger,
           });
 
+          var platforms = eventConfig.platforms || [eventConfig.platform];
+
+          function fireAll() {
+            platforms.forEach(function (p) {
+              var name = (eventConfig.platformNames && eventConfig.platformNames[p]) || eventConfig.event_name;
+              var params = buildParams(eventConfig.params || [], p, eventConfig.platformFields || {}, matchedElement);
+              trackEvent(p, name, params);
+            });
+          }
+
           if (eventType === 'submit') {
             event.preventDefault();
-            trackEvent(eventConfig.platform, eventConfig.event_name);
-            // Allow time for pixel transports (fbq uses image pixels)
-            // to initiate before the form navigates away.
-            // Use requestSubmit() to preserve other submit handlers.
+            fireAll();
             setTimeout(function () {
               if (typeof matchedElement.requestSubmit === 'function') {
                 matchedElement.requestSubmit();
@@ -441,7 +546,7 @@
               }
             }, 150);
           } else {
-            trackEvent(eventConfig.platform, eventConfig.event_name);
+            fireAll();
           }
         }
       });
