@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pigxel Test Switcher</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+    
+    .content {
+      padding: 40px;
+    }
+    
+    .test-switcher {
+      background: #f8f9ff;
+      border: 2px solid #667eea;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+    }
+    
+    .test-switcher h2 {
+      color: #667eea;
+      margin-bottom: 20px;
+    }
+    
+    .test-option {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border: 2px solid #e0e7ff;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .test-option:hover {
+      border-color: #667eea;
+      transform: translateX(5px);
+    }
+    
+    .test-option.active {
+      border-color: #10b981;
+      background: #f0fdf4;
+    }
+    
+    .test-option h3 {
+      color: #333;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .test-option p {
+      color: #666;
+      margin-bottom: 10px;
+    }
+    
+    .test-option code {
+      background: #e0e7ff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      color: #5145cd;
+      font-size: 0.9rem;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    .status-active {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    
+    .status-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .status-paused {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .expected {
+      margin-top: 10px;
+      padding: 10px;
+      background: #f9fafb;
+      border-left: 3px solid #667eea;
+      font-size: 0.9rem;
+    }
+    
+    .expected strong {
+      color: #667eea;
+    }
+    
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 0.95rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.2s;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+    }
+    
+    .current-status {
+      background: #1f2937;
+      color: #10b981;
+      padding: 20px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      margin-bottom: 20px;
+    }
+    
+    .current-status .label {
+      color: #9ca3af;
+      font-size: 0.9rem;
+    }
+    
+    .current-status .value {
+      color: #10b981;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+    
+    .reload-notice {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    
+    .reload-notice strong {
+      color: #92400e;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🧪 Pigxel Test Switcher</h1>
+      <p>Test different site statuses without editing code</p>
+    </div>
+    
+    <div class="content">
+      <div class="current-status">
+        <div class="label">Currently Testing:</div>
+        <div class="value" id="current-site">No site selected - Choose one below</div>
+      </div>
+
+      <div class="test-switcher">
+        <h2>🎯 Select Test Scenario</h2>
+        
+        <div class="test-option" data-site="client_active">
+          <h3>
+            <span>✅</span>
+            Active Site
+            <span class="status-badge status-active">ACTIVE</span>
+          </h3>
+          <p><strong>Site ID:</strong> <code>client_active</code></p>
+          <p><strong>Scenario:</strong> Full tracking enabled - pixels load and events fire</p>
+          <div class="expected">
+            <strong>Expected:</strong><br>
+            ✓ Console: "Pigxel loaded (ACTIVE)"<br>
+            ✓ GA4 script loads (G-TEST-123)<br>
+            ✓ Meta Pixel loads (123-TEST)<br>
+            ✓ All click/submit events tracked<br>
+            ✓ Event monitor shows tracked events
+          </div>
+          <button onclick="loadTest('client_active')">Load This Test</button>
+        </div>
+
+        <div class="test-option" data-site="client_pending">
+          <h3>
+            <span>⏳</span>
+            Pending Site
+            <span class="status-badge status-pending">PENDING</span>
+          </h3>
+          <p><strong>Site ID:</strong> <code>client_pending</code></p>
+          <p><strong>Scenario:</strong> Script installed but user hasn't authorized tracking yet</p>
+          <div class="expected">
+            <strong>Expected:</strong><br>
+            ✓ Console: "Pigxel loaded (PENDING)"<br>
+            ✗ No GA4 script loads<br>
+            ✗ No Meta Pixel loads<br>
+            ✗ No events tracked<br>
+            ✓ Website works normally
+          </div>
+          <button onclick="loadTest('client_pending')">Load This Test</button>
+        </div>
+
+        <div class="test-option" data-site="client_paused">
+          <h3>
+            <span>⏸️</span>
+            Paused Site
+            <span class="status-badge status-paused">PAUSED</span>
+          </h3>
+          <p><strong>Site ID:</strong> <code>client_paused</code></p>
+          <p><strong>Scenario:</strong> Tracking temporarily disabled (e.g., billing issue)</p>
+          <div class="expected">
+            <strong>Expected:</strong><br>
+            ✓ Console: "Pigxel loaded (PAUSED)"<br>
+            ✗ No pixels load<br>
+            ✗ No events tracked<br>
+            ✓ Website works normally
+          </div>
+          <button onclick="loadTest('client_paused')">Load This Test</button>
+        </div>
+
+        <div class="test-option" data-site="does-not-exist">
+          <h3>
+            <span>❌</span>
+            Invalid Site
+            <span class="status-badge status-paused">ERROR</span>
+          </h3>
+          <p><strong>Site ID:</strong> <code>does-not-exist</code></p>
+          <p><strong>Scenario:</strong> Site ID not found in database</p>
+          <div class="expected">
+            <strong>Expected:</strong><br>
+            ✓ Console: Error logged (non-intrusive)<br>
+            ✗ No pixels load<br>
+            ✗ No tracking<br>
+            ✓ Website continues working normally
+          </div>
+          <button onclick="loadTest('does-not-exist')">Load This Test</button>
+        </div>
+      </div>
+
+      <div class="reload-notice">
+        <strong>📝 Note:</strong> When you click "Load This Test", the page will reload with the selected site ID. Open DevTools Console (F12) to see Pigxel logs.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Get current site ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentSiteId = urlParams.get('site');
+
+    if (currentSiteId) {
+      // Update current status display
+      document.getElementById('current-site').textContent = currentSiteId;
+      
+      // Highlight active test option
+      const activeOption = document.querySelector(`[data-site="${currentSiteId}"]`);
+      if (activeOption) {
+        activeOption.classList.add('active');
+      }
+
+      // Load Pigxel agent with the selected site ID
+      const script = document.createElement('script');
+      script.src = `pigxel.js?id=${currentSiteId}&debug=true`;
+      document.head.appendChild(script);
+
+      // Add some test elements for the selected site to interact with
+      setTimeout(() => {
+        addTestElements();
+      }, 1000);
+    }
+
+    function loadTest(siteId) {
+      // Reload page with new site ID
+      window.location.href = `?site=${siteId}`;
+    }
+
+    function addTestElements() {
+      // Add test buttons and forms dynamically
+      const testContainer = document.createElement('div');
+      testContainer.style.cssText = 'margin: 30px; padding: 30px; background: white; border-radius: 12px;';
+      testContainer.innerHTML = `
+        <h2 style="color: #667eea; margin-bottom: 20px;">🎮 Interactive Test Elements</h2>
+        
+        <div style="margin-bottom: 20px;">
+          <button id="buy-btn" style="margin-right: 10px;">
+            💳 Purchase Button (GA4)
+          </button>
+          
+          <button data-event="add_to_cart" style="margin-right: 10px;">
+            🛍️ Add to Cart (GA4)
+          </button>
+        </div>
+
+        <form class="signup-form" style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+          <h3 style="margin-bottom: 15px; color: #333;">📝 Sign Up Form (Meta Lead)</h3>
+          <input type="email" placeholder="Email" required style="display: block; width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #e0e7ff; border-radius: 6px;">
+          <input type="text" placeholder="Name" required style="display: block; width: 100%; padding: 10px; margin-bottom: 15px; border: 2px solid #e0e7ff; border-radius: 6px;">
+          <button type="submit">Submit Form</button>
+        </form>
+
+        <div style="margin-top: 30px; background: #1f2937; color: #10b981; padding: 20px; border-radius: 8px; font-family: 'Courier New', monospace; max-height: 300px; overflow-y: auto;" id="test-log">
+          <div style="color: #9ca3af; margin-bottom: 10px;">Event Log:</div>
+          <div id="log-entries">Waiting for events...</div>
+        </div>
+      `;
+      
+      document.querySelector('.content').appendChild(testContainer);
+
+      // Prevent form submission
+      document.querySelector('.signup-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        logEvent('Form submitted');
+      });
+
+      // Log button clicks
+      document.getElementById('buy-btn').addEventListener('click', () => {
+        logEvent('Purchase button clicked');
+      });
+
+      document.querySelector('[data-event="add_to_cart"]').addEventListener('click', () => {
+        logEvent('Add to cart button clicked');
+      });
+    }
+
+    function logEvent(message) {
+      const logEntries = document.getElementById('log-entries');
+      if (logEntries) {
+        const timestamp = new Date().toLocaleTimeString();
+        const entry = document.createElement('div');
+        entry.style.cssText = 'margin-bottom: 5px; padding: 5px; border-left: 2px solid #10b981; padding-left: 10px;';
+        entry.textContent = `[${timestamp}] ${message}`;
+        
+        if (logEntries.textContent === 'Waiting for events...') {
+          logEntries.textContent = '';
+        }
+        
+        logEntries.insertBefore(entry, logEntries.firstChild);
+
+        // Keep only last 10 entries
+        while (logEntries.children.length > 10) {
+          logEntries.removeChild(logEntries.lastChild);
+        }
+      }
+    }
+  </script>
+</body>
+</html>

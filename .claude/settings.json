@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la /Users/nnguy/pigxel/*.md)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(npx jest:*)",
+      "Read(//Users/nnguy/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/subagent-driven-development/**)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(curl -sI \"https://pixie-b5d33.web.app/pigxel.js\")",
+      "Bash(curl -s \"https://letsbereal.com.au/\")",
+      "Bash(curl -sI \"https://pixie-b5d33.web.app/pigxel.js?id=lets-be-real-qu2zys34\")",
+      "Bash(curl -s \"https://us-central1-pixie-b5d33.cloudfunctions.net/getSiteConfig?id=lets-be-real-qu2zys34\")",
+      "Bash(curl -s -X POST \"https://us-central1-pixie-b5d33.cloudfunctions.net/reportAudit?id=lets-be-real-qu2zys34\" -H \"Content-Type: application/json\" -d '{\"\"detected_pixels\"\":[\"\"test\"\"],\"\"script_installed\"\":true,\"\"page_url\"\":\"\"https://letsbereal.com.au/\"\",\"\"audit_timestamp\"\":\"\"2026-03-19T12:00:00Z\"\",\"\"detected_scripts\"\":[],\"\"has_data_layer\"\":false,\"\"data_layer_healthy\"\":false,\"\"data_layer_events\"\":[],\"\"gtag_id\"\":null,\"\"gtm_id\"\":null,\"\"fbq_id\"\":null,\"\"ttq_present\"\":false,\"\"linkedin_present\"\":false,\"\"pinterest_present\"\":false}')",
+      "Bash(curl -sI \"https://letsbereal.com.au/\")",
+      "Bash(curl -s \"https://pixie-b5d33.web.app/pigxel.js\")",
+      "Bash(curl -s -H \"Origin: https://letsbereal.com.au\" -I \"https://us-central1-pixie-b5d33.cloudfunctions.net/getSiteConfig?id=lets-be-real-qu2zys34\")",
+      "Bash(curl -s -H \"Origin: https://letsbereal.com.au\" -X OPTIONS \"https://us-central1-pixie-b5d33.cloudfunctions.net/reportAudit?id=lets-be-real-qu2zys34\" -H \"Access-Control-Request-Method: POST\" -H \"Access-Control-Request-Headers: content-type\" -I)",
+      "Bash(curl -s -X POST \"https://us-central1-pixie-b5d33.cloudfunctions.net/verifySiteInstallation\" -H \"Content-Type: application/json\" -d '{}')",
+      "Bash(firebase functions:list)",
+      "Bash(firebase functions:log --only reportAudit)",
+      "Bash(firebase functions:log --only getSiteConfig)",
+      "Read(//Users/nnguy/pigxel/**)",
+      "WebSearch",
+      "WebFetch(domain:developers.google.com)"
+    ],
+    "additionalDirectories": [
+      "/Users/nnguy/pigxel/docs/superpowers/plans"
+    ]
+  }
+}

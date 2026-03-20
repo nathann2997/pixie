@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Sites ──────────────────────────────────────────────────────────────────
+    // Users can only access their own sites
+    match /sites/{siteId} {
+
+      // Read own site
+      allow read: if request.auth != null
+        && request.auth.uid == resource.data.owner_id;
+
+      // Create a new site — caller must set themselves as owner
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.owner_id;
+
+      // Update own site (status toggle, pixel config, events etc.)
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.owner_id;
+
+      // Delete own site
+      allow delete: if request.auth != null
+        && request.auth.uid == resource.data.owner_id;
+    }
+
+    // ── Everything else is denied by default ──────────────────────────────────
+    // Cloud Functions access the database via the Admin SDK which bypasses
+    // these rules — so the AI functions can read/write freely server-side.
+  }
+}

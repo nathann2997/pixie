@@ -1,0 +1,35 @@
+{
+  "name": "pigxel",
+  "version": "1.0.0",
+  "description": "Pigxel - AI Marketing Agent. Intelligent pixel management and event tracking.",
+  "main": "pigxel.js",
+  "scripts": {
+    "serve": "python3 -m http.server 8000",
+    "build": "terser pigxel.js -c -m -o dist/pigxel.min.js --comments '/^!/'",
+    "test": "open test.html"
+  },
+  "keywords": [
+    "marketing",
+    "analytics",
+    "tracking",
+    "ga4",
+    "facebook-pixel",
+    "meta-pixel",
+    "event-tracking",
+    "spa",
+    "vanilla-js"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "terser": "^5.31.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/pigxel"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/pigxel/issues"
+  },
+  "homepage": "https://github.com/yourusername/pigxel#readme"
+}

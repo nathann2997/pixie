@@ -1,0 +1,271 @@
+# Pixie .cursorrules
+
+## 🎯 Product Identity
+
+**What Pixie is:** A marketer-first SaaS platform for managing website tracking.
+**Who uses it:** Marketers, not engineers. Assume zero technical knowledge.
+**Design vibe:** Warm professional — think Vercel, Linear, or Notion. Clean, confident, modern. Not a developer tool.
+
+---
+
+## 🎨 Visual Identity
+
+**Mode:** Dark mode only. Force `class="dark"` on `<html>`.
+**Tone:** Refined and trustworthy. No cyber aesthetics, no neon overload, no sci-fi jargon.
+
+---
+
+## 🖍️ Color Palette
+
+| Role | Token | Notes |
+|------|-------|-------|
+| Page background | `bg-slate-950` | The base — used everywhere |
+| Card surface | `bg-slate-900` | Solid, not transparent |
+| Card border | `border-slate-800` | Subtle dividers |
+| Primary accent | `bg-violet-600` | Buttons, active states — use sparingly |
+| Primary hover | `bg-violet-500` | Hover state for violet elements |
+| Success / Live | `emerald-500` / `emerald-400` | Active status only |
+| Warning / Setup | `amber-400` / `amber-500` | Pending/incomplete state |
+| Error | `rose-500` / `rose-400` | Destructive actions, error states |
+| Text default | `text-slate-200` | Body text |
+| Text headings | `text-white` | Page titles, card headings |
+| Text muted | `text-slate-400` / `text-slate-500` | Descriptions, hints, labels |
+| Code / monospace | `text-violet-300` on `bg-slate-950` | Script tags, IDs |
+
+**Do not use:** `fuchsia`, `neon` glow stacks on body text or decorative backgrounds, `bg-slate-900/40 backdrop-blur-md` for standard cards (use solid `.card-solid` instead).
+
+---
+
+## 🔠 Typography
+
+- **Headings:** Inter — use `font-bold` or `font-semibold`, negative letter spacing (`-0.025em`)
+- **Body:** Inter — `text-sm` for most UI, `text-xs` for hints and labels
+- **Code / IDs:** JetBrains Mono — only for actual code, script tags, and pixel IDs
+- **Page titles:** `text-xl font-bold text-white` — not gradient text, not 4xl
+- **Section headings:** `text-sm font-semibold text-white`
+- **Gradient text** (`.gradient-text`): Reserved for the Pixie logo / hero moments only — not every heading
+
+---
+
+## 🧩 UI Component Rules
+
+### Cards
+Use `.card-solid` for all standard cards:
+```
+bg-slate-900 border border-slate-800 rounded-xl
+```
+Use `.glass-card` only for modals and overlays:
+```
+bg-slate-900/60 backdrop-blur-sm border border-slate-800 rounded-xl
+```
+Never stack multiple blur/transparency effects.
+
+### Buttons
+- **Primary (NeonButton):** `bg-violet-600 hover:bg-violet-500 text-white` — subtle shadow only, no large glow
+- **Secondary:** `bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700`
+- **Ghost:** `text-slate-400 hover:text-slate-200 hover:bg-slate-800/60`
+- **Destructive:** `text-slate-400 hover:text-rose-400 hover:bg-rose-500/10`
+- Button heights: `h-9` for standard, `h-10` for prominent actions
+
+### Input Fields
+```
+bg-slate-800 border-slate-700 text-white placeholder:text-slate-500
+focus:border-violet-500 focus:ring-1 focus:ring-violet-500/30
+```
+
+### Status Badges (use `<StatusBadge>` component)
+- `active` → displays **"Live"** — `emerald-500` dot (animated pulse), `emerald-400` text
+- `pending` → displays **"Setup Required"** — `amber-400` dot, `amber-400` text
+- `paused` → displays **"Paused"** — `slate-500` dot, `slate-400` text
+- Never show raw status strings (`"active"`, `"pending"`, `"paused"`) directly in the UI
+
+### Sidebar
+- Width: `w-56`
+- Background: `bg-slate-950`
+- Border: `border-r border-slate-800`
+- Active nav item: `bg-violet-600/15 text-violet-300 border border-violet-500/20`
+- Inactive nav item: `text-slate-400 hover:text-slate-200 hover:bg-slate-800/60`
+- No vertical bar glow indicators — use background highlight instead
+
+### Modals
+Use the `GlassModal` component. Inner card uses `.glass-card p-6`.
+
+### Tabs
+Use the `Tabs` component from `@/components/ui/tabs`.
+Tab names must be plain English — no technical terms.
+- Correct: "Overview", "Analytics IDs", "Conversions"
+- Wrong: "Configuration", "Rules", "Pixel IDs"
+
+---
+
+## 🗣️ Language Rules (Marketer-First)
+
+This is the most important section. Every word in the UI must be readable by a marketer with no technical background.
+
+### Status labels
+| Internal value | UI label |
+|---------------|---------|
+| `active` | Live |
+| `pending` | Setup Required |
+| `paused` | Paused |
+
+### Navigation labels
+| Internal name | UI label |
+|--------------|---------|
+| Dashboard | My Sites |
+| Settings | Settings |
+| Documentation | Help & Setup Guide |
+
+### Feature labels
+| Technical term | Plain English |
+|---------------|--------------|
+| Pixel IDs | Analytics IDs / Connect your analytics |
+| GA4 Measurement ID | Google Analytics 4 ID |
+| Meta Pixel ID | Facebook / Meta Pixel ID |
+| Event rules | Conversion events |
+| Selector | (Hidden — shown only in collapsible "Technical details") |
+| Site ID | (Hidden — only shown in the script tag section) |
+| pixie.js | (Never shown to the user — it's just "the tracking script") |
+
+### Copy guidelines
+- Use "your website" not "site" where possible
+- Use "conversion" not "event" in user-facing text
+- Use "Turn tracking on/off" not "toggle status"
+- Use "Ask your developer to paste this code" not just "Install"
+- Use "Google Analytics" not "GA4" in labels
+- Use "Facebook / Meta" not "Meta" alone (more recognisable)
+- Error messages must be plain sentences: "Incorrect email or password" not Firebase error codes
+- Empty states must explain the benefit, not just describe the absence: "Add your first website to start tracking conversions automatically" not "No sites"
+
+---
+
+## 📐 Layout & Spacing
+
+- Max content width: `max-w-3xl` or `max-w-4xl` with `mx-auto`
+- Page padding: `px-4 sm:px-6 py-8 lg:py-10`
+- Card internal padding: `p-5` standard, `p-6` for forms
+- Gap between cards: `space-y-4` or `gap-3`/`gap-4` in grids
+- Section headings inside cards: `text-sm font-semibold text-white mb-1` + `text-xs text-slate-400` description below
+
+---
+
+## 📱 Responsive Design
+
+- **Mobile:** Top navigation bar with Pixie logo + hamburger → slide-out sidebar overlay
+- **Tablet:** Same as mobile until `lg` breakpoint
+- **Desktop (lg+):** Persistent left sidebar `w-56`, content fills remaining width
+- Cards: `sm:grid-cols-2 lg:grid-cols-3` for site lists
+- Never rely on hover-only interactions for mobile critical actions
+- All modals: full-width on mobile, capped width (`max-w-md`) on desktop
+
+---
+
+## 🚫 Anti-Patterns (Never Do These)
+
+- No cyber grid background patterns (`bg-[linear-gradient(...)]` decorative grids)
+- No ambient glow orb decorations (`absolute ... bg-violet-500/30 blur-[128px]`)
+- No fake data in charts or sparklines — if there's no real data, don't show the chart
+- No raw Firebase error messages exposed to users
+- No CSS selectors, IDs, or technical strings visible without a "Technical details" toggle
+- No "Command Center" or similar dev-tool language
+- No `backdrop-blur-md` on standard page cards (only modals/overlays)
+- No gradient text on anything other than the logo/hero
+- No `debug=true` in script tags shown to users
+- No stacking of multiple box-shadow glow effects
+- No heavy use of `animate-pulse` on decorative elements
+
+---
+
+## 🎭 Interactions & Animation
+
+- **Transitions:** `transition-colors duration-150` for colour changes, `transition-all duration-150` for layout changes
+- **Hover on cards:** `hover:border-slate-700 hover:bg-slate-800/60` — subtle, no glow
+- **Page entry:** `.animate-fade-in` (`opacity 0→1` + `translateY 4px→0`)
+- **Loading states:** Single minimal spinner (`h-5 w-5 border-2 border-violet-500 border-t-transparent animate-spin`)
+- **Success feedback:** `sonner` toast — `toast.success("Descriptive message")` — no full-screen celebrations
+- **Status dot on Live badge:** `pulse-slow` animation only — nowhere else
+
+---
+
+## ⚡ New User Onboarding
+
+When a site has `status === "pending"`, always show a **Setup Checklist** with three steps:
+1. Connect an analytics platform (GA4 or Meta Pixel ID)
+2. Install the tracking script
+3. Track your first conversion
+
+Each step uses `CheckCircle2` (done) or `Circle` (not done) icons from Lucide. Mark steps complete dynamically based on actual data.
+
+---
+
+## 🛡️ Engineering Standards
+
+### TypeScript
+- Never use `any`. Always define interfaces for props and data shapes.
+- Interface names: PascalCase (`SiteData`, `EventRule`)
+- Props interfaces: ComponentName + Props (`PixelConfigFormProps`)
+
+### React
+- Functional components only: `const Component = () => {}`
+- Use `useCallback` / `useMemo` for expensive calculations or prop-passed functions
+- UI components (`/components/ui`): purely presentational
+- Feature components (`/components/dashboard`): contain state and logic
+- Page files (`page.tsx`): fetch data and compose feature components only
+
+### Firebase
+- Never import `firebase-admin` in client-side files
+- Use `onSnapshot` for all dashboard data (real-time updates)
+- Wrap all Firebase calls in `try/catch`
+- Show user-friendly error messages via `sonner` (`toast.error`)
+- Never expose raw Firebase error codes in the UI
+
+### Firestore field naming
+- `status`: `"active"` | `"pending"` | `"paused"`
+- `owner_id`: user UID
+- `trackingConfig.pixels.ga4`: GA4 Measurement ID
+- `trackingConfig.pixels.meta`: Meta Pixel ID
+- `trackingConfig.events[]`: array of event rules
+- `suggested_events[]`: AI-scanned conversion point suggestions
+
+---
+
+## 📂 File Structure
+
+```
+dashboard/
+  app/
+    page.tsx                      # Loading redirect only
+    login/page.tsx                # Auth page
+    dashboard/page.tsx            # Site list
+    dashboard/[siteId]/page.tsx   # Site detail
+    dashboard/settings/page.tsx   # Account settings
+    dashboard/docs/page.tsx       # Help guide
+  components/
+    ui/                           # Presentational primitives
+    layouts/sidebar-layout.tsx    # App shell
+    auth/auth-guard.tsx           # Route protection
+    providers/firebase-provider.tsx
+    dashboard/                    # Feature components
+      add-site-modal.tsx
+      pixel-config-form.tsx
+      event-rules-list.tsx
+      suggested-rules-list.tsx
+  lib/
+    firebase.ts                   # SDK initialisation
+    utils.ts                      # cn() helper
+```
+
+---
+
+## 🤖 Cursor Behaviour
+
+- Write code first, explain only if asked
+- Never add decorative comments like `// 🚀 Handling auth`
+- Use `cn()` from `@/lib/utils` whenever accepting `className` props
+- Always use `sonner` (`toast.success` / `toast.error`) for feedback — never `alert()`
+- Before writing a delete or destructive action, add a confirmation step or comment `// TODO: confirm before delete`
+- Keep page components thin — move logic into feature components
+
+---
+
+**The north star: every screen should feel like it was built by a thoughtful design team at a modern SaaS company. A marketer should be able to use Pixie on day one with zero explanation.**
