@@ -177,7 +177,7 @@ export default function EventsPage() {
 
   const visiblePlatforms = useMemo(() => {
     const used = new Set(allEvents.flatMap((e) => e.platforms));
-    return ALL_PLATFORM_TABS.filter((p) => p.key === "all" || used.has(p.key));
+    return ALL_PLATFORM_TABS.filter((p) => p.key === "all" || used.has(p.key as Platform));
   }, [allEvents]);
 
   const platformCounts = useMemo(() => {
